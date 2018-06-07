@@ -40,7 +40,7 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
 
     /* Signed 16-bit little-endian format */
     snd_pcm_hw_params_set_format(*handle, params,
-                                 SND_PCM_FORMAT_S32_LE);
+                                 SND_PCM_FORMAT_S16_LE);
 
     /* Two channels (stereo) */
     snd_pcm_hw_params_set_channels(*handle, params, number_of_channels);
@@ -71,7 +71,7 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
     snd_pcm_hw_params_free(params);
 }
 
-void playback(snd_pcm_t *play_handle, play_sample_type *play_buffer, snd_pcm_uframes_t play_period_size){
+void playback(snd_pcm_t *play_handle, sample_type *play_buffer, snd_pcm_uframes_t play_period_size){
     int rc;
     rc = snd_pcm_writei(play_handle, play_buffer, play_period_size);
     if (rc == -EPIPE) {

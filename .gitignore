@@ -33,6 +33,8 @@
 
 # Audio files
 *.raw
+*.dat
+
 ### CMake ###
 CMakeCache.txt
 CMakeFiles

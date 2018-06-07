@@ -39,7 +39,7 @@ void init_capture(snd_pcm_t **cap_handle, unsigned int *cap_freq, snd_pcm_uframe
 
     /* Signed 16-bit little-endian format */
     snd_pcm_hw_params_set_format(*cap_handle, params,
-                                 SND_PCM_FORMAT_S32_LE);
+                                 SND_PCM_FORMAT_S16_LE);
 
     /* Two channels (stereo) */
     snd_pcm_hw_params_set_channels(*cap_handle, params, number_of_channels);
@@ -68,7 +68,7 @@ void init_capture(snd_pcm_t **cap_handle, unsigned int *cap_freq, snd_pcm_uframe
     snd_pcm_hw_params_free(params);
 }
 
-void capture(snd_pcm_t *cap_handle, cap_sample_type *cap_buffer, snd_pcm_uframes_t cap_period_size){
+void capture(snd_pcm_t *cap_handle, sample_type *cap_buffer, snd_pcm_uframes_t cap_period_size){
     long int rc;
     rc = snd_pcm_readi(cap_handle, cap_buffer, cap_period_size);
     if (rc == -EPIPE) {
