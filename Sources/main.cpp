@@ -1,12 +1,18 @@
 
 #include <iostream>
+#include <fstream>
 #include "../Headers/capture.h"
 #include "../Headers/playback.h"
 #include "Fir1fixed.h"
 #include "../Headers/processing.h"
 
-
 int main() {
+
+    std::ofstream outfile1; 
+    std::ofstream outfile2;
+
+    outfile1.open("out1.dat", std::ios_base::app);
+    outfile2.open("out2.dat", std::ios_base::app);
 
     const std::string capture_device_name = "default";
     const std::string playback_device_name = "default";
@@ -36,11 +42,17 @@ int main() {
     Fir1fixed fir_left("../coeff12bit.dat", 12);
     Fir1fixed fir_right("../coeff12bit.dat", 12);
 
-    while (true) {
-        capture(cap_handle, buffer, cap_period_size);
-        processing(buffer, buffer_length, fir_left, fir_right);
-        playback(play_handle, buffer, cap_period_size);
+    int sample = 0;
 
+    while (sample < 10000) {
+        ++sample;
+        capture(cap_handle, buffer, cap_period_size);
+        for(int i=0; i < buffer_length; ++i)
+            outfile1 << buffer[i] << std::endl;
+        processing(buffer, buffer_length, fir_left, fir_right);
+        for(int i=0; i < buffer_length; ++i)
+            outfile2 << buffer[i] << std::endl;
+        playback(play_handle, buffer, cap_period_size);
     }
 
     snd_pcm_drain(play_handle);
