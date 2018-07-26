@@ -8,7 +8,7 @@
 
 int main() {
 
-    std::ofstream outfile1; 
+    std::ofstream outfile1;
     std::ofstream outfile2;
 
     outfile1.open("out1.dat", std::ios_base::app);

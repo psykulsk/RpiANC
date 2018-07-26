@@ -7,9 +7,9 @@ out2L = out2(2:2:end);
 out2R = out2(1:2:end);
 
 figure(1)
-title("Time series")
 subplot(2,2,1)
 plot(out1L)
+title("Time series")
 subplot(2,2,2)
 plot(out1R)
 subplot(2,2,3)
@@ -18,9 +18,9 @@ subplot(2,2,4)
 plot(out2R)
 
 figure(2)
-title("FFT")
 subplot(2,2,1)
 plot(real(fftshift(fft(out1L))))
+title("FFT")
 subplot(2,2,2)
 plot(real(fftshift(fft(out1R))))
 subplot(2,2,3)
