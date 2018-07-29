@@ -8,5 +8,5 @@ file(GLOB SOURCES
         Sources/*.cpp
         )
 
-add_executable(RpiAnc ${SOURCES} Headers/common.h)
+add_executable(RpiAnc ${SOURCES} Headers/common.h Sources/FIRFilter.cpp Headers/FIRFilter.h Sources/LMSFilter.cpp Headers/LMSFilter.h)
 target_link_libraries(RpiAnc asound fir)
