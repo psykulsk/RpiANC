@@ -19,3 +19,7 @@ sample_type FIRFilter::fir_step(sample_type new_sample) {
     }
     return new_val;
 }
+
+filter_coeffs_array FIRFilter::get_coefficients() {
+    return filter_coeffs_array();
+}

@@ -23,7 +23,7 @@ int main() {
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
     unsigned int number_of_channels = 2;
-    snd_pcm_uframes_t cap_period_size = 64;
+    snd_pcm_uframes_t cap_period_size = 32;
 
     init_capture(&cap_handle, &play_freq, &cap_period_size, number_of_channels,
                  capture_device_name);
@@ -33,7 +33,7 @@ int main() {
 
     snd_pcm_t *play_handle;
     snd_pcm_uframes_t play_buffer_size = 1024;
-    snd_pcm_uframes_t play_period_size = 64;
+    snd_pcm_uframes_t play_period_size = 32;
 
     init_playback(&play_handle, &play_freq, &play_period_size,
                   &play_buffer_size, number_of_channels, playback_device_name);

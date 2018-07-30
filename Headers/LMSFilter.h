@@ -7,19 +7,22 @@
 
 
 #include "common.h"
+#include "FIRFilter.h"
 
 class LMSFilter {
 
 public:
-    LMSFilter(float alpha_val) : _alpha{alpha_val}{
+    FIRFilter fir_filter;
+    LMSFilter(float alpha_val) : _alpha{alpha_val}, _lms_coefficients{{0}}{
 
     }
 
-
+    sample_type lms_step(sample_type x_reference_sample, sample_type error_sample);
+    void update_filter(float filter_coeff_change);
 
 private:
     float _alpha;
-    filter_array _lms_coefficients = {0};
+    filter_coeffs_array _lms_coefficients;
 };
 
 
