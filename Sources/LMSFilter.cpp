@@ -14,7 +14,7 @@ sample_type LMSFilter::lms_step(sample_type x_reference_sample, sample_type erro
 
 void LMSFilter::update_filter(float filter_coeff_change) {
     filter_coeffs_array filter_values = fir_filter.get_coefficients();
-    for (float &coeff : filter_values) {
+    for (auto &coeff : filter_values) {
         coeff = coeff + filter_coeff_change;
     }
     fir_filter.set_coefficients(filter_values);

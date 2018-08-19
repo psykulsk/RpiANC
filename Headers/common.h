@@ -7,9 +7,9 @@
 
 #include <array>
 
-typedef short int sample_type;
-const long unsigned int FILTER_LENGTH = 20;
+typedef double sample_type;
+const long unsigned int FILTER_LENGTH = 21;
 typedef std::array<sample_type, FILTER_LENGTH> samples_array;
-typedef std::array<float, FILTER_LENGTH> filter_coeffs_array;
+typedef std::array<double, FILTER_LENGTH> filter_coeffs_array;
 
 #endif //RPIANC_COMMON_H
