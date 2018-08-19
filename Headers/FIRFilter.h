@@ -24,6 +24,7 @@ public:
     void reset_sample_buffer(){
         _samples_buffer = {0};
     }
+    void lms_coefficients_update(double update_step);
 private:
     filter_coeffs_array _filter_coefficients;
     samples_array _samples_buffer;
