@@ -14,15 +14,18 @@ class LMSFilter {
 public:
     FIRFilter fir_filter;
 
-    LMSFilter(float alpha_val) : _alpha{alpha_val}, _lms_coefficients{{0}} {
+    LMSFilter(float alpha_val) : _alpha{alpha_val}, _lms_coefficients{{0}}, _samples_buffer{{0}} {
 
     }
 
     sample_type lms_step(sample_type x_reference_sample, sample_type error_sample);
 
+    void lms_filter_update(double update_step);
+
 private:
     float _alpha;
     filter_coeffs_array _lms_coefficients;
+    samples_array _samples_buffer;
 };
 
 

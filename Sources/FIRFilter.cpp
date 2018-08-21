@@ -21,13 +21,7 @@ sample_type FIRFilter::fir_step(sample_type new_sample) {
 }
 
 filter_coeffs_array FIRFilter::get_coefficients() {
-    return filter_coeffs_array();
+    return _filter_coefficients;
 }
 
-void FIRFilter::lms_coefficients_update(double update_step) {
-
-    for (long unsigned int i = 0; i < FILTER_LENGTH; ++i) {
-        _filter_coefficients[i] += _samples_buffer[i] * update_step;
-    }
-
-}
+ou

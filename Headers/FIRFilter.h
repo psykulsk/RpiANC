@@ -9,8 +9,9 @@
 
 class FIRFilter {
 public:
-    FIRFilter(): _filter_coefficients{{0.0f}}, _samples_buffer{{0}}{}
-    FIRFilter(filter_coeffs_array coefficients): _filter_coefficients{coefficients}, _samples_buffer{0}{
+    FIRFilter() : _filter_coefficients{{0.0f}}, _samples_buffer{{0}} {}
+
+    FIRFilter(filter_coeffs_array coefficients) : _filter_coefficients{coefficients}, _samples_buffer{0} {
 
     }
 
@@ -18,13 +19,14 @@ public:
 
     filter_coeffs_array get_coefficients();
 
-    void set_coefficients(filter_coeffs_array new_coefficients){
+    void set_coefficients(filter_coeffs_array new_coefficients) {
         _filter_coefficients = new_coefficients;
     }
-    void reset_sample_buffer(){
+
+    void reset_sample_buffer() {
         _samples_buffer = {0};
     }
-    void lms_coefficients_update(double update_step);
+
 private:
     filter_coeffs_array _filter_coefficients;
     samples_array _samples_buffer;
