@@ -24,4 +24,4 @@ filter_coeffs_array FIRFilter::get_coefficients() {
     return _filter_coefficients;
 }
 
-ou
+

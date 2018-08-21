@@ -18,7 +18,7 @@ public:
 
     }
 
-    sample_type lms_step(sample_type x_reference_sample, sample_type error_sample);
+    virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample);
 
     void lms_filter_update(double update_step);
 

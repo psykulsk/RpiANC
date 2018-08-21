@@ -8,10 +8,13 @@ file(GLOB SOURCES
         Sources/*.cpp
         )
 
+set(SOURCE_FILES Sources/FIRFilter.cpp Sources/LMSFilter.cpp Mains/lmstest.cpp)
+set(HEADER_FILES Headers/common.h Headers/FIRFilter.h Headers/LMSFilter.h Headers/matplotlibcpp.h)
+add_executable(RpiAnc Mains/main.cpp ${SOURCE_FILES} ${HEADER_FILES})
+
 find_package(PythonLibs 2.7)
-add_executable(RpiAnc Mains/main.cpp Headers/common.h Sources/FIRFilter.cpp Headers/FIRFilter.h Sources/LMSFilter.cpp Headers/LMSFilter.h Mains/lmstest.cpp Headers/matplotlibcpp.h)
 target_link_libraries(RpiAnc asound fir)
 
-add_executable(lmstest Mains/lmstest.cpp Headers/common.h Sources/FIRFilter.cpp Headers/FIRFilter.h Sources/LMSFilter.cpp Headers/LMSFilter.h Mains/lmstest.cpp Headers/matplotlibcpp.h)
+add_executable(lmstest Mains/lmstest.cpp ${SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(lmstest PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(lmstest ${PYTHON_LIBRARIES})
