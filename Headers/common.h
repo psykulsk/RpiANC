@@ -9,6 +9,6 @@
 
 typedef double sample_type;
 const long unsigned int FILTER_LENGTH = 21;
-const long unsigned int FX_FILTER_LENGTH = 12;
+const long unsigned int FX_FILTER_LENGTH = 1;
 
 #endif //RPIANC_COMMON_H

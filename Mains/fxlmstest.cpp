@@ -7,11 +7,7 @@
 
 void fxlmstest() {
     FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
-            0.113421421451563, 0.117926910521821, 0.113421421451563,
-            0.100759234867788, 0.0822835022069283, 0.0612310733616234,
-            0.0409337972357249, 0.024043402026782, 0.0119930412581248,
-            0.00483106060833201, 0.00144698955374871,
-            9.30221684750573e-05};
+            1.00};
     FIRFilter<FX_FILTER_LENGTH> s_filter(s_filter_coeffs);
     FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(0.0005, s_filter_coeffs);
     unsigned long number_of_samples = 5000;
@@ -26,9 +22,9 @@ void fxlmstest() {
     signal_vec correction_vect;
     signal_vec error_signal;
     for (unsigned long i = 0; i < number_of_samples; ++i) {
-        sample_type filtered_reference = s_filter.fir_step(reference_signal.at(i));
-        sample_type correction_sample = fxlms_filter.lms_step(filtered_reference, error_sample);
-        sample_type corrected_sample = reference_signal.at(i) - correction_sample;
+        sample_type correction_sample = fxlms_filter.lms_step(reference_signal.at(i), error_sample);
+        sample_type filtered_correction_sample = s_filter.fir_step(correction_sample);
+        sample_type corrected_sample = reference_signal.at(i) - filtered_correction_sample;
         error_sample = original_signal.at(i) - corrected_sample;
         error_signal.push_back(error_sample);
         correction_vect.push_back(correction_sample);

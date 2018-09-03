@@ -23,12 +23,12 @@ public:
         sample_type new_val = 0;
 
         // Shift sample_buffer (FIFO style)
-        for (long unsigned int i = FILTER_LENGTH - 1; i >= 1; --i) {
+        for (long unsigned int i = filter_length - 1; i >= 1; --i) {
             _samples_buffer[i] = _samples_buffer[i - 1];
         }
         _samples_buffer[0] = new_sample;
         // Multiply and accumulate
-        for (long unsigned int i = 0; i < FILTER_LENGTH; ++i) {
+        for (long unsigned int i = 0; i < filter_length; ++i) {
             new_val += _samples_buffer[i] * _filter_coefficients[i];
         }
         return new_val;
