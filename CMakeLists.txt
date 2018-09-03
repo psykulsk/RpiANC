@@ -8,9 +8,10 @@ file(GLOB SOURCES
         Sources/*.cpp
         )
 
-set(SOURCE_FILES Sources/FIRFilter.cpp Sources/LMSFilter.cpp Sources/FxLMSFilter.cpp)
-set(HEADER_FILES Headers/common.h Headers/FIRFilter.h Headers/LMSFilter.h Headers/matplotlibcpp.h Headers/FxLMSFilter.h)
-add_executable(RpiAnc Mains/main.cpp ${SOURCE_FILES} ${HEADER_FILES})
+set(SOUND_INTERFACE_SOURCE_FILES Sources/capture.cpp Sources/playback.cpp Sources/processing.cpp)
+set(SOURCE_FILES)
+set(HEADER_FILES Headers/common.h Headers/FIRFilter.h Headers/LMSFilter.h Headers/matplotlibcpp.h Headers/FxLMSFilter.h Headers/test_commons.h)
+add_executable(RpiAnc Mains/main.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
 
 find_package(PythonLibs 2.7)
 target_link_libraries(RpiAnc asound fir)

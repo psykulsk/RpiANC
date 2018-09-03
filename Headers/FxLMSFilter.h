@@ -8,14 +8,22 @@
 #include "LMSFilter.h"
 #include "FIRFilter.h"
 
-class FxLMSFilter: public LMSFilter {
+template<int fx_filter_length, int filter_length>
+class FxLMSFilter : public LMSFilter<filter_length> {
 
-    FxLMSFilter(float alpha_val, const filter_coeffs_array s_filter) : LMSFilter(alpha_val), _s_filter{s_filter} {};
+public:
+    typedef std::array<double, filter_length> filter_coeffs_array;
+    typedef std::array<double, fx_filter_length> fx_filter_coeffs_array;
 
-    sample_type lms_step(sample_type x_reference_sample, sample_type error_sample);
+    FxLMSFilter(float alpha_val, const fx_filter_coeffs_array s_filter) : LMSFilter<filter_length>(alpha_val), _s_filter{s_filter} {};
+
+    sample_type lms_step(sample_type x_reference_sample, sample_type error_sample) {
+        sample_type filtered_x_sample = _s_filter.fir_step(x_reference_sample);
+        return LMSFilter<filter_length>::lms_step(filtered_x_sample, error_sample);
+    }
 
 private:
-    FIRFilter _s_filter;
+    FIRFilter<fx_filter_length> _s_filter;
 
 };
 
