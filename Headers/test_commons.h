@@ -13,10 +13,11 @@
 #include "../Headers/matplotlibcpp.h"
 #include "../Headers/FIRFilter.h"
 #include "../Headers/LMSFilter.h"
+#include "../Headers/common.h"
 
 using std::vector;
 
-typedef vector<double> signal_vec;
+typedef vector<sample_type> signal_vec;
 
 namespace plt = matplotlibcpp;
 

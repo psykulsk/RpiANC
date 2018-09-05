@@ -12,7 +12,6 @@ template<int fx_filter_length, int filter_length>
 class FxLMSFilter : public LMSFilter<filter_length> {
 
 public:
-    typedef std::array<double, filter_length> filter_coeffs_array;
     typedef std::array<double, fx_filter_length> fx_filter_coeffs_array;
 
     FxLMSFilter(float alpha_val, const fx_filter_coeffs_array s_filter) : LMSFilter<filter_length>(alpha_val), _s_filter{s_filter} {};

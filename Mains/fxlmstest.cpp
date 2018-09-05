@@ -11,7 +11,7 @@ void fxlmstest() {
             0.00483106060833201, 0.00144698955374871,
             9.30221684750573e-05};
     FIRFilter<FX_FILTER_LENGTH> s_filter(s_filter_coeffs);
-    FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(0.5, s_filter_coeffs);
+    FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(5.0, s_filter_coeffs);
     unsigned long number_of_samples = 5000;
     double sampling_freq = 20000.0;
     signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.8, 1000.0, 0.0);
