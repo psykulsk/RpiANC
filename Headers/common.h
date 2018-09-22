@@ -7,7 +7,7 @@
 
 #include <array>
 
-typedef double sample_type;
+typedef float sample_type;
 const long unsigned int FILTER_LENGTH = 21;
 const long unsigned int FX_FILTER_LENGTH = 6;
 

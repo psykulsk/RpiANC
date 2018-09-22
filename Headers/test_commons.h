@@ -14,12 +14,26 @@
 #include "../Headers/FIRFilter.h"
 #include "../Headers/LMSFilter.h"
 #include "../Headers/common.h"
+#include <limits>
 
 using std::vector;
 
+typedef int16_t fixed_sample_type;
 typedef vector<sample_type> signal_vec;
+typedef vector<fixed_sample_type> fixed_signal_vec;
 
 namespace plt = matplotlibcpp;
+
+sample_type signed_fixed_to_floating(fixed_sample_type sample) {
+    sample_type max = std::numeric_limits<fixed_sample_type>::max();
+    return static_cast<sample_type>(sample)/max;
+}
+
+fixed_sample_type floating_to_signed_fixed(sample_type sample) {
+    sample_type max = std::numeric_limits<fixed_sample_type>::max();
+    return static_cast<fixed_sample_type>(max*sample);
+}
+
 
 signal_vec singen(long int nr_of_samples, double sampling_freq, double amplitude, double freq, double phase_shift) {
     signal_vec sine_sig;
@@ -40,4 +54,5 @@ signal_vec gen_func() {
     return sum;
 
 }
+
 #endif //RPIANC_TEST_COMMONS_H
