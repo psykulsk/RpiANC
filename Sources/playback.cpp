@@ -40,7 +40,7 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
 
     /* Signed 16-bit little-endian format */
     snd_pcm_hw_params_set_format(*handle, params,
-                                 SND_PCM_FORMAT_S16_LE);
+                                 SND_PCM_FORMAT_S32_LE);
 
     /* Two channels (stereo) */
     snd_pcm_hw_params_set_channels(*handle, params, number_of_channels);

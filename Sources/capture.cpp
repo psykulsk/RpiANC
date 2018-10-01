@@ -39,7 +39,7 @@ void init_capture(snd_pcm_t **cap_handle, unsigned int *cap_freq, snd_pcm_uframe
 
     /* Signed 16-bit little-endian format */
     snd_pcm_hw_params_set_format(*cap_handle, params,
-                                 SND_PCM_FORMAT_S16_LE);
+                                 SND_PCM_FORMAT_S32_LE);
 
     /* Two channels (stereo) */
     snd_pcm_hw_params_set_channels(*cap_handle, params, number_of_channels);
