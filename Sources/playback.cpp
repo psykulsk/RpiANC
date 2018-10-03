@@ -6,8 +6,9 @@
 #include <iostream>
 
 
-void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_t *play_period_size, snd_pcm_uframes_t *play_buffer_size,
-                   unsigned int number_of_channels, const std::string playback_device_name){
+void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_t *play_period_size,
+                   snd_pcm_uframes_t *play_buffer_size,
+                   unsigned int number_of_channels, const std::string playback_device_name) {
 
     snd_pcm_hw_params_t *params;
     int rc;
@@ -50,8 +51,8 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
     snd_pcm_hw_params_set_rate_near(*handle, params,
                                     play_freq, &dir);
 
-    snd_pcm_hw_params_set_buffer_size_near (*handle, params, play_buffer_size);
-    snd_pcm_hw_params_set_period_size_near (*handle, params, play_period_size, &dir);
+    snd_pcm_hw_params_set_buffer_size_near(*handle, params, play_buffer_size);
+    snd_pcm_hw_params_set_period_size_near(*handle, params, play_period_size, &dir);
     /* Write the parameters to the driver */
     rc = snd_pcm_hw_params(*handle, params);
     if (rc < 0) {
@@ -65,26 +66,28 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
     snd_pcm_hw_params_get_period_size(params, play_period_size, &dir);
     snd_pcm_hw_params_get_buffer_size(params, play_buffer_size);
 
-    std::cerr << "Playback params: " << "Capture rate: " << *play_freq << " Period size: " << *play_period_size <<
+    std::cerr << "Playback params: " << "Capture rate: " << *play_freq << " Period size: "
+              << *play_period_size <<
               " Buffer size: " << *play_buffer_size << std::endl;
 
     snd_pcm_hw_params_free(params);
 }
 
-void playback(snd_pcm_t *play_handle, sample_type *play_buffer, snd_pcm_uframes_t play_period_size){
+void playback(snd_pcm_t *play_handle, fixed_sample_type *play_buffer,
+              snd_pcm_uframes_t play_period_size) {
     int rc;
     rc = snd_pcm_writei(play_handle, play_buffer, play_period_size);
     if (rc == -EPIPE) {
         /* EPIPE means underrun */
         fprintf(stderr, "playback underrun occurred\n");
         snd_pcm_prepare(play_handle);
-    } else if (rc == -EAGAIN){
+    } else if (rc == -EAGAIN) {
         //fprintf(stderr, "EAGAIN writei not available\n");
-    } else if (rc < 0 ) {
+    } else if (rc < 0) {
         fprintf(stderr,
                 "playback error from writei: %s\n",
                 snd_strerror(rc));
-    }  else if (rc != (int)play_period_size) {
+    } else if (rc != (int) play_period_size) {
         fprintf(stderr,
                 "playback short write, write %d frames\n", rc);
     }

@@ -8,13 +8,19 @@ file(GLOB SOURCES
         Sources/*.cpp
         )
 
+find_package(PythonLibs 2.7)
+
 set(SOUND_INTERFACE_SOURCE_FILES Sources/capture.cpp Sources/playback.cpp Sources/processing.cpp)
 set(SOURCE_FILES)
 set(HEADER_FILES Headers/common.h Headers/FIRFilter.h Headers/LMSFilter.h Headers/matplotlibcpp.h Headers/FxLMSFilter.h Headers/test_commons.h)
-add_executable(RpiAnc Mains/main.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
 
-find_package(PythonLibs 2.7)
-target_link_libraries(RpiAnc asound fir)
+add_executable(ffANC Mains/feedforward_anc.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
+target_include_directories(ffANC PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(ffANC asound fir ${PYTHON_LIBRARIES})
+
+add_executable(secPath Mains/offline_sec_path_modelling.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
+target_include_directories(secPath PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(secPath asound fir ${PYTHON_LIBRARIES})
 
 add_executable(lmstest Mains/lmstest.cpp ${SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(lmstest PRIVATE ${PYTHON_INCLUDE_DIRS})

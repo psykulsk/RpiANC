@@ -17,6 +17,7 @@
 void init_capture(snd_pcm_t **cap_handle, unsigned int *cap_freq, snd_pcm_uframes_t *cap_period_size,
                   unsigned int number_of_channels, const std::string capture_device_name);
 
-void capture(snd_pcm_t *cap_handle, sample_type *cap_buffer, snd_pcm_uframes_t cap_period_size);
+void capture(snd_pcm_t *cap_handle, fixed_sample_type *cap_buffer,
+             snd_pcm_uframes_t cap_period_size);
 
 #endif //ONELOOPCPP_CAPTURE_H

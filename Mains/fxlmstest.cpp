@@ -65,8 +65,8 @@ void fxlmstest() {
                    std::plus<>());
     sample_type error_sample = 0.0;
     signal_vec output;
-    signal_vec correction_vect;
     signal_vec error_signal;
+    signal_vec correction_vect;
     for (unsigned long i = 0; i < number_of_samples; ++i) {
         sample_type correction_sample = fxlms_filter.lms_step(reference_signal.at(i), error_sample);
         sample_type filtered_correction_sample = s_filter.fir_step(correction_sample);
