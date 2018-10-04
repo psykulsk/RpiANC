@@ -11,7 +11,7 @@
 typedef double sample_type;
 typedef int32_t fixed_sample_type;
 const long unsigned int FILTER_LENGTH = 21;
-const long unsigned int FX_FILTER_LENGTH = 6;
+const long unsigned int FX_FILTER_LENGTH = 40;
 
 sample_type inline signed_fixed_to_floating(fixed_sample_type sample) {
     sample_type max = std::numeric_limits<fixed_sample_type>::max();
