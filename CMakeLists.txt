@@ -22,6 +22,10 @@ add_executable(secPath Mains/offline_sec_path_modelling.cpp ${SOURCE_FILES} ${SO
 target_include_directories(secPath PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(secPath asound fir ${PYTHON_LIBRARIES})
 
+add_executable(recNoise Mains/record_noise.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
+target_include_directories(recNoise PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(recNoise asound fir ${PYTHON_LIBRARIES})
+
 add_executable(lmstest Mains/lmstest.cpp ${SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(lmstest PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(lmstest ${PYTHON_LIBRARIES})
