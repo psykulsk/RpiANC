@@ -75,7 +75,7 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
 
 void playback(snd_pcm_t *play_handle, fixed_sample_type *play_buffer,
               snd_pcm_uframes_t play_period_size) {
-    int rc;
+    ssize_t rc;
     rc = snd_pcm_writei(play_handle, play_buffer, play_period_size);
     if (rc == -EPIPE) {
         /* EPIPE means underrun */
