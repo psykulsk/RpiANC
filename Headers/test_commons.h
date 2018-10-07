@@ -45,4 +45,14 @@ signal_vec gen_func() {
 
 }
 
+void save_vector_to_file(const std::string &filename, const fixed_signal_vec &signal){
+    std::ofstream file;
+    file.open(filename, std::ios::binary);
+    assert(file.is_open());
+    for (fixed_sample_type s : signal)
+        file.write((char *) &s, sizeof(fixed_sample_type));
+    file.close();
+}
+
+
 #endif //RPIANC_TEST_COMMONS_H

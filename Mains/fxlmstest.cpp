@@ -23,7 +23,8 @@ void fxlmstest_fixed() {
     signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.8, 1000.0, 0.0);
     signal_vec original_signal = singen(number_of_samples, sampling_freq, 1.0, 100.0, 0.0);
     signal_vec reference_signal = original_signal;
-    std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(), reference_signal.begin(),
+    std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(),
+                   reference_signal.begin(),
                    std::plus<>());
     fixed_sample_type error_sample = 0;
     signal_vec output;
@@ -31,11 +32,13 @@ void fxlmstest_fixed() {
     signal_vec error_signal;
     for (unsigned long i = 0; i < number_of_samples; ++i) {
         sample_type correction_sample = fxlms_filter.lms_step(reference_signal.at(i),
-                                                              signed_fixed_to_floating(error_sample));
+                                                              signed_fixed_to_floating(
+                                                                      error_sample));
         sample_type filtered_correction_sample = s_filter.fir_step(correction_sample);
         sample_type corrected_sample =
                 reference_signal.at(i) - filtered_correction_sample;
-        error_sample = floating_to_signed_fixed(original_signal.at(i)) - floating_to_signed_fixed(corrected_sample);
+        error_sample = floating_to_signed_fixed(original_signal.at(i)) -
+                       floating_to_signed_fixed(corrected_sample);
         error_signal.push_back(abs(error_sample));
         correction_vect.push_back(correction_sample);
         output.push_back(corrected_sample);
@@ -51,15 +54,14 @@ void fxlmstest_fixed() {
     plt::show();
 }
 
-void ReadFromFile(std::vector<fixed_sample_type > &x, const std::string &file_name)
-{
+void ReadFromFile(std::vector<fixed_sample_type> &x, const std::string &file_name) {
     std::ifstream read_file;
     read_file.open(file_name, std::ios::binary);
     assert(read_file.is_open());
 
 //    std::copy(std::istream_iterator<fixed_sample_type>(read_file), std::istream_iterator<fixed_sample_type>(),
 //              std::back_inserter(x));
-    while(!read_file.eof()){
+    while (!read_file.eof()) {
         fixed_sample_type sample;
         read_file.read((char *) &sample, sizeof(fixed_sample_type));
         x.push_back(sample);
@@ -69,46 +71,55 @@ void ReadFromFile(std::vector<fixed_sample_type > &x, const std::string &file_na
 
 void fxlmstest_recorded_data() {
     std::vector<fixed_sample_type> ref_vec, err_vec;
-    ReadFromFile(ref_vec,"../test_rec/ref_mic.dat");
-    ReadFromFile(err_vec,"../test_rec/err_mic.dat");
+    ReadFromFile(ref_vec, "../test_rec/ref_mic_test.dat");
+    ReadFromFile(err_vec, "../test_rec/err_mic_test.dat");
     FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
-        1.0
+            1.0
     };
-    FIRFilter<FX_FILTER_LENGTH_TEST> s_filter(s_filter_coeffs);
     FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH> fxlms_filter(0.1, s_filter_coeffs);
     sample_type error_sample = 0;
     signal_vec output;
     signal_vec correction_vect;
     signal_vec error_signal;
+    signal_vec error_signal_abs;
     signal_vec output_signal;
     signal_vec original_error;
     signal_vec original_error_abs;
     for (unsigned long i = 0; i < ref_vec.size(); ++i) {
-        sample_type correction_sample = fxlms_filter.lms_step(signed_fixed_to_floating(ref_vec.at(i)),
-                                                              error_sample);
+        sample_type correction_sample = fxlms_filter.lms_step(
+                signed_fixed_to_floating(ref_vec.at(i)),
+                error_sample);
         sample_type filtered_correction_sample = correction_sample;
         sample_type err_sample = signed_fixed_to_floating(err_vec.at(i));
 
         error_sample = err_sample + filtered_correction_sample;
         error_signal.push_back(error_sample);
+        error_signal_abs.push_back(std::abs(error_sample));
         output_signal.push_back(error_sample);
         correction_vect.push_back(filtered_correction_sample);
         original_error.push_back(err_sample);
-        original_error_abs.push_back(err_sample);
+        original_error_abs.push_back(std::abs(err_sample));
     }
     signal_vec x(ref_vec.size());
+
+    unsigned int number_of_plots = 6;
     std::iota(x.begin(), x.end(), 0);
-    plt::subplot(5, 1, 1);
+    plt::subplot(number_of_plots, 1, 1);
     plt::plot(ref_vec);
-    plt::title("Reference");
-    plt::subplot(5, 1, 2);
+    plt::title("Reference mic signal");
+    plt::subplot(number_of_plots, 1, 2);
     plt::plot(correction_vect);
-    plt::subplot(5, 1, 3);
+    plt::title("Correction signal");
+    plt::subplot(number_of_plots, 1, 3);
     plt::plot(output_signal);
-    plt::subplot(5, 1, 4);
+    plt::title("Corrected signal");
+    plt::subplot(number_of_plots, 1, 4);
     plt::plot(original_error);
-    plt::subplot(5, 1, 5);
-    plt::plot(x, original_error_abs, "b-",x, error_signal, "r-");
+    plt::title("Original, uncorrected signal");
+    plt::subplot(number_of_plots, 1, 5);
+    plt::semilogy(x, original_error_abs, "b-");
+    plt::subplot(number_of_plots, 1, 6);
+    plt::semilogy(x, error_signal_abs, "r-");
     plt::show();
 }
 
@@ -124,7 +135,8 @@ void fxlmstest() {
     signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.8, 1000.0, 0.0);
     signal_vec original_signal = singen(number_of_samples, sampling_freq, 1.0, 100.0, 0.0);
     signal_vec reference_signal = original_signal;
-    std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(), reference_signal.begin(),
+    std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(),
+                   reference_signal.begin(),
                    std::plus<>());
     sample_type error_sample = 0.0;
     signal_vec output;

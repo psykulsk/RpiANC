@@ -2,18 +2,12 @@
 #include <fstream>
 #include <vector>
 #include "../Headers/capture.h"
+#include "../Headers/test_commons.h"
 
-#define DEPLOYED_ON_RPI
+//#define DEPLOYED_ON_RPI
 
 int main() {
 
-    std::ofstream ref_mic;
-    std::ofstream err_mic;
-
-    ref_mic.open("rec/ref_mic_test.dat", std::ios::binary);
-    err_mic.open("rec/err_mic_test.dat", std::ios::binary);
-    assert(ref_mic.is_open());
-    assert(err_mic.is_open());
     std::vector<fixed_sample_type> err_vec;
     std::vector<fixed_sample_type> ref_vec;
 
@@ -44,17 +38,12 @@ int main() {
             else
                 ref_vec.push_back(buffer[i]);
     }
-
-    for (fixed_sample_type s : ref_vec)
-        ref_mic.write((char *) &s, sizeof(fixed_sample_type));
-    for (fixed_sample_type s : err_vec)
-        err_mic.write((char *) &s, sizeof(fixed_sample_type));
-
+    
+    save_vector_to_file("rec/ref_mic.dat", ref_vec);
+    save_vector_to_file("rec/err_mic.dat", err_vec);
+    
     snd_pcm_drain(cap_handle);
     snd_pcm_close(cap_handle);
-    ref_mic.close();
-    err_mic.close();
-
     return 0;
 }
 
