@@ -16,7 +16,10 @@ void processing(fixed_sample_type *samples_buffer, long unsigned int buffer_leng
             1.9079e-06,
             4.5538e-07
     };
-    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(, s_filter_coeffs);
+//    static FxLMSFilter<1, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
+//            1.0
+//    };
+    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(0.1, s_filter_coeffs);
 //    LMSFilter<FX_FILTER_LENGTH> lms_filter(0.5);
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {

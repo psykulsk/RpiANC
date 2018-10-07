@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -9,29 +8,25 @@
 
 int main() {
 
-    std::ofstream ref_mic;
-    std::ofstream err_mic;
-    std::ofstream corr_sig;
+    std::ifstream ref_mic;
+    std::ifstream err_mic;
 
     ref_mic.open("rec/ref_mic.dat", std::ios::binary);
     err_mic.open("rec/err_mic.dat", std::ios::binary);
-    corr_sig.open("rec/corr_sig.dat", std::ios::binary);
     std::vector<fixed_sample_type> err_vec;
     std::vector<fixed_sample_type> ref_vec;
     std::vector<fixed_sample_type> corr_vec;
 
 //    const std::string capture_device_name = "default";
 //    const std::string playback_device_name = "default";
-    const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
-    const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
+//    const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
+//    const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
     unsigned int number_of_channels = 2;
     snd_pcm_uframes_t cap_period_size = 64;
 
-    init_capture(&cap_handle, &play_freq, &cap_period_size, number_of_channels,
-                 capture_device_name);
     snd_pcm_uframes_t buffer_length = cap_period_size * number_of_channels;
     fixed_sample_type buffer[buffer_length];
 
@@ -81,4 +76,3 @@ int main() {
 
     return 0;
 }
-

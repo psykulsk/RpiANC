@@ -16,6 +16,7 @@
 #include "../Headers/common.h"
 #include <limits>
 
+const long unsigned int FX_FILTER_LENGTH_TEST = 1;
 using std::vector;
 
 typedef vector<sample_type> signal_vec;
