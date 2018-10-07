@@ -31,10 +31,6 @@ add_executable(recTestData Mains/record_test_data.cpp ${SOURCE_FILES} ${SOUND_IN
 target_include_directories(recTestData PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(recTestData asound fir ${PYTHON_LIBRARIES})
 
-add_executable(testFFANC Mains/offline_ff_anc_test.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
-target_include_directories(secPath PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(secPath asound fir ${PYTHON_LIBRARIES})
-
 add_executable(lmstest Mains/lmstest.cpp ${SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(lmstest PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(lmstest ${PYTHON_LIBRARIES})
