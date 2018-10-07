@@ -4,7 +4,7 @@
 #include "../Headers/capture.h"
 #include "../Headers/test_commons.h"
 
-//#define DEPLOYED_ON_RPI
+#define DEPLOYED_ON_RPI
 
 int main() {
 
@@ -38,10 +38,10 @@ int main() {
             else
                 ref_vec.push_back(buffer[i]);
     }
-    
+
     save_vector_to_file("rec/ref_mic.dat", ref_vec);
     save_vector_to_file("rec/err_mic.dat", err_vec);
-    
+
     snd_pcm_drain(cap_handle);
     snd_pcm_close(cap_handle);
     return 0;

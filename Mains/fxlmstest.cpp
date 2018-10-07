@@ -76,7 +76,7 @@ void fxlmstest_recorded_data() {
     FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
             1.0
     };
-    FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH> fxlms_filter(0.1, s_filter_coeffs);
+    FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH> fxlms_filter(1.0, s_filter_coeffs);
     sample_type error_sample = 0;
     signal_vec output;
     signal_vec correction_vect;
@@ -85,6 +85,7 @@ void fxlmstest_recorded_data() {
     signal_vec output_signal;
     signal_vec original_error;
     signal_vec original_error_abs;
+    fixed_signal_vec output_signal_fixed;
     for (unsigned long i = 0; i < ref_vec.size(); ++i) {
         sample_type correction_sample = fxlms_filter.lms_step(
                 signed_fixed_to_floating(ref_vec.at(i)),
@@ -96,6 +97,7 @@ void fxlmstest_recorded_data() {
         error_signal.push_back(error_sample);
         error_signal_abs.push_back(std::abs(error_sample));
         output_signal.push_back(error_sample);
+        output_signal_fixed.push_back(floating_to_signed_fixed(error_sample));
         correction_vect.push_back(filtered_correction_sample);
         original_error.push_back(err_sample);
         original_error_abs.push_back(std::abs(err_sample));
@@ -121,6 +123,7 @@ void fxlmstest_recorded_data() {
     plt::subplot(number_of_plots, 1, 6);
     plt::semilogy(x, error_signal_abs, "r-");
     plt::show();
+    save_vector_to_file("rec/output_signal.raw", output_signal_fixed);
 }
 
 void fxlmstest() {
