@@ -7,6 +7,8 @@
 #include "Fir1fixed.h"
 #include "../Headers/processing.h"
 
+#define DEPLOYED_ON_RPI
+
 int main() {
 
     std::ofstream ref_mic;
@@ -14,16 +16,23 @@ int main() {
     std::ofstream corr_sig;
 
     ref_mic.open("rec/ref_mic.dat", std::ios::binary);
+    assert(ref_mic.is_open());
     err_mic.open("rec/err_mic.dat", std::ios::binary);
+    assert(err_mic.is_open());
     corr_sig.open("rec/corr_sig.dat", std::ios::binary);
+    assert(corr_sig.is_open());
+
     std::vector<fixed_sample_type> err_vec;
     std::vector<fixed_sample_type> ref_vec;
     std::vector<fixed_sample_type> corr_vec;
 
-//    const std::string capture_device_name = "default";
-//    const std::string playback_device_name = "default";
+#ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
     const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
+#else
+    const std::string capture_device_name = "default";
+    const std::string playback_device_name = "default";
+#endif
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;

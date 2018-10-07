@@ -8,25 +8,23 @@
 #include "Fir1fixed.h"
 #include "../Headers/processing.h"
 #include "../Headers/LMSFilter.h"
-//#include "../Headers/matplotlibcpp.h"
 
 
+#define DEPLOYED_ON_RPI
 
-//namespace plt = matplotlibcpp;
 
 int main() {
 
     std::ifstream noise_file("whitenoise.raw", std::ios::binary);
-    if (!noise_file.is_open()) {
-        std::cerr << "Unable to open file" << std::endl;
-        return -1;
-    }
+    assert(noise_file.is_open());
 
-//    const std::string capture_device_name = "default";
-//    const std::string playback_device_name = "default";
-
+#ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
     const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
+#else
+    const std::string capture_device_name = "default";
+    const std::string playback_device_name = "default";
+#endif
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
@@ -57,7 +55,7 @@ int main() {
         ++sample;
         ssize_t rc;
         size_t size = buffer_length * sizeof(fixed_sample_type);
-        noise_file.read((char*)play_buffer, size);
+        noise_file.read((char *) play_buffer, size);
 //        rc = read(0, play_buffer, size);
 
 //        if (rc == 0) {

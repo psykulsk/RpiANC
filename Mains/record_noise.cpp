@@ -6,24 +6,23 @@
 #include "../Headers/playback.h"
 #include "../Headers/processing.h"
 
+#define DEPLOYED_ON_RPI
+
 int main() {
 
     std::ifstream noise_file("whitenoise.raw", std::ios::binary);
-    if (!noise_file.is_open()) {
-        std::cerr << "Unable to open noise file" << std::endl;
-        return -1;
-    }
+    assert(noise_file.is_open());
 
     std::ofstream recorded_noise_file("recorded_whitenoise.raw", std::ios::binary);
-    if (!noise_file.is_open()) {
-        std::cerr << "Unable to open output file" << std::endl;
-        return -1;
-    }
-//    const std::string capture_device_name = "default";
-//    const std::string playback_device_name = "default";
+    assert(recorded_noise_file.is_open());
 
+#ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
     const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
+#else
+    const std::string capture_device_name = "default";
+    const std::string playback_device_name = "default";
+#endif
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
@@ -48,14 +47,14 @@ int main() {
     while (sample < 10000) {
         ++sample;
         size_t size = buffer_length * sizeof(fixed_sample_type);
-        noise_file.read((char*)play_buffer, size);
+        noise_file.read((char *) play_buffer, size);
         playback(play_handle, play_buffer, cap_period_size);
         capture(cap_handle, capture_buffer, cap_period_size);
-        fixed_sample_type record_buffer[buffer_length/2];
-        for(int i=0; i<buffer_length;i += 2){
-            record_buffer[i/2] = capture_buffer[i];
+        fixed_sample_type record_buffer[buffer_length / 2];
+        for (int i = 0; i < buffer_length; i += 2) {
+            record_buffer[i / 2] = capture_buffer[i];
         }
-        recorded_noise_file.write((char *)record_buffer, size/2);
+        recorded_noise_file.write((char *) record_buffer, size / 2);
     }
 
     noise_file.close();

@@ -89,6 +89,6 @@ void playback(snd_pcm_t *play_handle, fixed_sample_type *play_buffer,
                 snd_strerror(rc));
     } else if (rc != (int) play_period_size) {
         fprintf(stderr,
-                "playback short write, write %d frames\n", rc);
+                "playback short write, write %ld frames\n", rc);
     }
 }

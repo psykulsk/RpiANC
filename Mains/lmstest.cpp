@@ -7,7 +7,7 @@
 void fir_test() {
     signal_vec input = gen_func();
     // fir values from octave function fir1(20, 0.1)
-    FIRFilter<FILTER_LENGTH>::filter_coeffs_array fir = {9.30221684750573e-05, 0.00144698955374871, 0.00483106060833201,
+    FIRFilter<FILTER_LENGTH_TEST>::filter_coeffs_array fir = {9.30221684750573e-05, 0.00144698955374871, 0.00483106060833201,
                                                          0.0119930412581248, 0.024043402026782, 0.0409337972357249,
                                                          0.0612310733616234, 0.0822835022069283, 0.100759234867788,
                                                          0.113421421451563, 0.117926910521821, 0.113421421451563,
@@ -15,7 +15,7 @@ void fir_test() {
                                                          0.0409337972357249, 0.024043402026782, 0.0119930412581248,
                                                          0.00483106060833201, 0.00144698955374871,
                                                          9.30221684750573e-05};
-    FIRFilter<FILTER_LENGTH> filter = FIRFilter<FILTER_LENGTH>(fir);
+    FIRFilter<FILTER_LENGTH_TEST> filter = FIRFilter<FILTER_LENGTH_TEST>(fir);
     signal_vec output;
     for (double sample: input) {
         output.push_back(filter.fir_step(sample));
@@ -36,7 +36,7 @@ void lms_test() {
     signal_vec reference_signal = original_signal;
     std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(), reference_signal.begin(),
                    std::plus<>());
-    LMSFilter<FILTER_LENGTH> lms_filter = LMSFilter<FILTER_LENGTH>(0.0005);
+    LMSFilter<FILTER_LENGTH_TEST> lms_filter = LMSFilter<FILTER_LENGTH_TEST>(0.0005);
     sample_type error_sample = 0.0;
     signal_vec output;
     signal_vec correction_vect;
