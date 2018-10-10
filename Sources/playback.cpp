@@ -13,7 +13,6 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
     snd_pcm_hw_params_t *params;
     int rc;
     int dir;
-    int val;
 
     /* Open PCM device for recording (capture). */
     rc = snd_pcm_open(handle, playback_device_name.c_str(),

@@ -11,17 +11,17 @@ recorded_noise = double(recorded_noise)/double(intmax("int32"));
 M = 500;
 sigma_d = 0.001;
 h = [1, 0.8, -0.6, 0.4, 0.2, -0.3, -0.5, 0.7, 0.1, 0.5];
-L = 8;
+
 x = original_noise(1:2:60000);
 #d = filter(h,1,x);
-d = recorded_noise(1:30000);
+d = recorded_noise(323001:end);
 
 #x = randn(1, M);
 #d = filter(h, 1, x);
+L = 5;
 
-lambda = 1;
-gamma = 100;
-for lambda = [5]
+gamma = 1;
+for lambda = [1.01]
     title1 = sprintf('RLS, lamda = %d, gamma = %d\nWsp��czynniki filtru', lambda, gamma);
     
     [e,y,ff] = rls1(x,d,L,lambda,gamma);
@@ -32,7 +32,7 @@ for lambda = [5]
    
     subplot(2,1,2)
     semilogy(abs(e))
-    ff(:,M)
+    ff(:,M);
     title('Sygna� b��du');
    # waitforbuttonpress
 end

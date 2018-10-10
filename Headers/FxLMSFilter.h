@@ -14,7 +14,8 @@ class FxLMSFilter : public LMSFilter<filter_length> {
 public:
     typedef std::array<double, fx_filter_length> fx_filter_coeffs_array;
 
-    FxLMSFilter(float alpha_val, const fx_filter_coeffs_array s_filter) : LMSFilter<filter_length>(alpha_val), _s_filter{s_filter} {};
+    FxLMSFilter(float alpha_val, const fx_filter_coeffs_array s_filter) :
+            LMSFilter<filter_length>(alpha_val), _s_filter{s_filter} {};
 
     sample_type lms_step(sample_type x_reference_sample, sample_type error_sample) {
         sample_type filtered_x_sample = _s_filter.fir_step(x_reference_sample);

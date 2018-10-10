@@ -11,7 +11,6 @@ void init_capture(snd_pcm_t **cap_handle, unsigned int *cap_freq, snd_pcm_uframe
     snd_pcm_hw_params_t *params;
     int rc;
     int dir;
-    int val;
 
     /* Open PCM device for recording (capture). */
     rc = snd_pcm_open(cap_handle, capture_device_name.c_str(),
