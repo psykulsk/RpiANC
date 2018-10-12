@@ -10,11 +10,13 @@
 
 int main() {
 
-    std::ifstream noise_file("whitenoise.raw", std::ios::binary);
+    std::ifstream noise_file("whitenoise3.raw", std::ios::binary);
     assert(noise_file.is_open());
 
-    std::ofstream recorded_noise_file("recorded_whitenoise.raw", std::ios::binary);
-    assert(recorded_noise_file.is_open());
+    std::vector<fixed_sample_type> record_vec;
+    std::vector<fixed_sample_type> left_channel_noise;
+    std::vector<fixed_sample_type> right_channel_noise;
+
 
 #ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
@@ -37,28 +39,35 @@ int main() {
 
 
     snd_pcm_t *play_handle;
-    snd_pcm_uframes_t play_device_buffer = 2048;
-    snd_pcm_uframes_t play_period_size = 32;
+    snd_pcm_uframes_t play_device_buffer = 1024;
+    snd_pcm_uframes_t play_period_size = 64;
 
     init_playback(&play_handle, &play_freq, &play_period_size,
                   &play_device_buffer, number_of_channels, playback_device_name);
 
     int sample = 0;
-    while (sample < 10000) {
+    while (sample < 3000) {
         ++sample;
         size_t size = buffer_length * sizeof(fixed_sample_type);
         noise_file.read((char *) play_buffer, size);
         playback(play_handle, play_buffer, cap_period_size);
-        capture(cap_handle, capture_buffer, cap_period_size);
-        fixed_sample_type record_buffer[buffer_length / 2];
-        for (int i = 0; i < buffer_length; i += 2) {
-            record_buffer[i / 2] = capture_buffer[i];
+        for (unsigned long i = 0; i < buffer_length; ++i) {
+            if(i%2)
+                left_channel_noise.push_back(play_buffer[i]);
+            else
+                right_channel_noise.push_back(play_buffer[i]);
         }
-        recorded_noise_file.write((char *) record_buffer, size / 2);
+        capture(cap_handle, capture_buffer, cap_period_size);
+        for (unsigned long i = 0; i < buffer_length; ++i) {
+            if(i%2)
+                record_vec.push_back(capture_buffer[i]);
+        }
     }
 
+    save_vector_to_file("rec/recorded_whitenoise.dat", record_vec);
+    save_vector_to_file("rec/left_channel_noise.dat", left_channel_noise);
+    save_vector_to_file("rec/right_channel_noise.dat", right_channel_noise);
     noise_file.close();
-    recorded_noise_file.close();
     snd_pcm_drain(play_handle);
     snd_pcm_close(play_handle);
 

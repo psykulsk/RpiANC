@@ -6,20 +6,17 @@
 #include "../Headers/FxLMSFilter.h"
 
 void processing(fixed_sample_type *samples_buffer, long unsigned int buffer_length) {
-//    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
-//            -1.0467e-04,
-//            -6.0321e-04,
-//            2.6721e-04,
-//            -7.7127e-04,
-//            3.3347e-04,
-//            -2.5020e-05,
-//            1.9079e-06,
-//            4.5538e-07
-//    };
-    static FxLMSFilter<1, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
-            1.0
+    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
+            -0.0121146,
+            -0.0072095,
+            -0.0046806,
+            0.0041966,
+            0.0237970
     };
-    static FxLMSFilter<1, FILTER_LENGTH> fxlms_filter(0.1, s_filter_coeffs);
+//    static FxLMSFilter<1, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
+//            1.0
+//    };
+    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(3.0, s_filter_coeffs);
 //    LMSFilter<FX_FILTER_LENGTH> lms_filter(0.5);
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
