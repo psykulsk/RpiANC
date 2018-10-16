@@ -9,8 +9,11 @@
 int main() {
 
     std::vector<fixed_sample_type> err_vec;
+    err_vec.reserve(1280000);
     std::vector<fixed_sample_type> ref_vec;
+    ref_vec.reserve(1280000);
     std::vector<fixed_sample_type> corr_vec;
+    corr_vec.reserve(1280000);
 
 #ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
@@ -33,7 +36,7 @@ int main() {
 
     snd_pcm_t *play_handle;
     snd_pcm_uframes_t play_buffer_size = 1024;
-    snd_pcm_uframes_t play_period_size = 64;
+    snd_pcm_uframes_t play_period_size = 256;
 
     init_playback(&play_handle, &play_freq, &play_period_size,
                   &play_buffer_size, number_of_channels, playback_device_name);
