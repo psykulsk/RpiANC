@@ -21,19 +21,23 @@ public:
 
     }
 
-    virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample){
+    virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample) {
+        static sample_type input_signal_power_estimate = 0.0;
+        input_signal_power_estimate = (1 - _power_smoothing_factor) * input_signal_power_estimate +
+                                      _power_smoothing_factor * error_sample * error_sample;
         // Shift samples buffer
-        for (long unsigned int i = filter_length - 1; i >= 1; --i) {
+        for (long int i = filter_length - 1; i >= 1; --i) {
             _samples_buffer[i] = _samples_buffer[i - 1];
         }
         _samples_buffer[0] = x_reference_sample;
         // Update filter coefficients
-        lms_filter_update(-_alpha * static_cast<double>(error_sample));
+        lms_filter_update(
+                -(_alpha / (input_signal_power_estimate + 0.1)) * static_cast<double>(error_sample));
         // Perform filtering step, to generate new y correction sample
         return fir_filter.fir_step(x_reference_sample);
     }
 
-    void lms_filter_update(double update_step){
+    void lms_filter_update(double update_step) {
         filter_coeffs_array filter_coeffs = fir_filter.get_coefficients();
         for (int i = 0; i < filter_length; ++i) {
             filter_coeffs.at(i) += _samples_buffer.at(i) * update_step;
@@ -42,6 +46,7 @@ public:
     }
 
 private:
+    float _power_smoothing_factor = 0.001;
     float _alpha;
     filter_coeffs_array _lms_coefficients;
     samples_array _samples_buffer;

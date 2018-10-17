@@ -9,16 +9,16 @@
 #include "../Headers/common.h"
 
 void fxlmstest_fixed() {
-    FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
+    FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH_TEST>::fx_filter_coeffs_array s_filter_coeffs = {
             0.0409337972357249, 0.024043402026782, 0.0119930412581248,
             0.00483106060833201, 0.00144698955374871,
             9.30221684750573e-05};
-    FIRFilter<FX_FILTER_LENGTH> s_filter(s_filter_coeffs);
+    FIRFilter<FX_FILTER_LENGTH_TEST> s_filter(s_filter_coeffs);
     s_filter_coeffs = {
             0.2409337972357249, 0.094043402026782, 0.0119930412581248,
             0.00483106060833201, 0.00144698955374871,
             9.30221684750573e-05};
-    FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(1.0, s_filter_coeffs);
+    FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH_TEST> fxlms_filter(1.0, s_filter_coeffs);
     unsigned long number_of_samples = 5000;
     double sampling_freq = 20000.0;
     signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.8, 1000.0, 0.0);
@@ -131,12 +131,12 @@ void fxlmstest_recorded_data() {
 }
 
 void fxlmstest() {
-    FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
+    FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH_TEST>::fx_filter_coeffs_array s_filter_coeffs = {
             0.0409337972357249, 0.024043402026782, 0.0119930412581248,
             0.00483106060833201, 0.00144698955374871,
             9.30221684750573e-05};
-    FIRFilter<FX_FILTER_LENGTH> s_filter(s_filter_coeffs);
-    FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(5.0, s_filter_coeffs);
+    FIRFilter<FX_FILTER_LENGTH_TEST> s_filter(s_filter_coeffs);
+    FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH_TEST> fxlms_filter(1.5, s_filter_coeffs);
     unsigned long number_of_samples = 5000;
     double sampling_freq = 20000.0;
     signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.8, 1000.0, 0.0);
@@ -171,7 +171,8 @@ void fxlmstest() {
 
 
 int main() {
-    fxlmstest_recorded_data();
+//    fxlmstest_recorded_data();
 //    fxlmstest_fixed();
+    fxlmstest();
     return 0;
 }

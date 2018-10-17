@@ -15,7 +15,7 @@
 #include "../Headers/LMSFilter.h"
 #include <limits>
 
-const long unsigned int FX_FILTER_LENGTH_TEST = 1;
+const long unsigned int FX_FILTER_LENGTH_TEST = 6;
 const long unsigned int FILTER_LENGTH_TEST = 21;
 using std::vector;
 

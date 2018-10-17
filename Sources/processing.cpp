@@ -13,11 +13,8 @@ void processing(fixed_sample_type *samples_buffer, long unsigned int buffer_leng
             0.0041966,
             0.0237970
     };
-//    static FxLMSFilter<1, FILTER_LENGTH>::fx_filter_coeffs_array s_filter_coeffs = {
-//            1.0
-//    };
-    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(5.0, s_filter_coeffs);
-//    LMSFilter<FX_FILTER_LENGTH> lms_filter(0.5);
+
+    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(0.8, s_filter_coeffs);
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         // 0.05 added to correct the dc offset in error which causes instability
@@ -28,23 +25,6 @@ void processing(fixed_sample_type *samples_buffer, long unsigned int buffer_leng
         samples_buffer[i] = fixed_correction_sample;
         samples_buffer[i - 1] = fixed_correction_sample;
     }
-}
-
-sample_type firFilt(sample_type new_sample,
-                    const sample_type (&filter_coefficients)[FILTER_LENGTH]) {
-    static sample_type sample_buffer[FILTER_LENGTH] = {0};
-    sample_type new_val = 0;
-
-    // Shift sample_buffer (FIFO style)
-    for (long unsigned int i = FILTER_LENGTH - 1; i >= 1; --i) {
-        sample_buffer[i] = sample_buffer[i - 1];
-    }
-    sample_buffer[0] = new_sample;
-    // Multiply and accumulate
-    for (long unsigned int i = 0; i < FILTER_LENGTH; ++i) {
-        new_val += sample_buffer[i] * filter_coefficients[i];
-    }
-    return new_val;
 }
 
 
