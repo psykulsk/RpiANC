@@ -43,7 +43,7 @@ int main() {
 
     int sample = 0;
 
-    while (sample < 30000) {
+    while (sample < 12000) {
         ++sample;
         capture(cap_handle, buffer, cap_period_size);
         for (unsigned int i = 0; i < buffer_length; ++i)

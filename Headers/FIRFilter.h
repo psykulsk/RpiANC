@@ -11,7 +11,7 @@ template<int filter_length>
 class FIRFilter {
 public:
     typedef std::array<sample_type, filter_length> samples_array;
-    typedef std::array<double, filter_length> filter_coeffs_array;
+    typedef std::array<float, filter_length> filter_coeffs_array;
 
     FIRFilter() : _filter_coefficients{{0.0f}}, _samples_buffer{{0.0}} {}
 

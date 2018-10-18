@@ -11,7 +11,7 @@
 #include <fstream>
 #include <assert.h>
 
-typedef double sample_type;
+typedef float sample_type;
 typedef int32_t fixed_sample_type;
 const long unsigned int FILTER_LENGTH = 30;
 const long unsigned int FX_FILTER_LENGTH = 5;
