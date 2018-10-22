@@ -14,7 +14,7 @@ void processing(fixed_sample_type *samples_buffer, long unsigned int buffer_leng
             0.0237970f
     };
 
-    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(0.5, s_filter_coeffs);
+    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE, s_filter_coeffs);
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         // 0.05 added to correct the dc offset in error which causes instability

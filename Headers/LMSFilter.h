@@ -33,7 +33,8 @@ public:
         _samples_buffer[0] = x_reference_sample;
         // Update filter coefficients
         lms_filter_update(
-                -(_alpha / (input_signal_power_estimate + 0.1f)) * static_cast<float>(error_sample));
+                -(_alpha / (input_signal_power_estimate + 0.1f)) *
+                static_cast<float>(error_sample));
         // Perform filtering step, to generate new y correction sample
         return fir_filter.fir_step(x_reference_sample);
     }
@@ -41,6 +42,8 @@ public:
     void lms_filter_update(float update_step) {
         filter_coeffs_array filter_coeffs = fir_filter.get_coefficients();
         for (int i = 0; i < filter_length; ++i) {
+//            filter_coeffs.at(i) = (1.0f - _alpha) * filter_coeffs.at(i)
+//                                  + _samples_buffer.at(i) * update_step;
             filter_coeffs.at(i) += _samples_buffer.at(i) * update_step;
         }
         fir_filter.set_coefficients(filter_coeffs);

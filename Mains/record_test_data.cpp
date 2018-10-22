@@ -32,7 +32,7 @@ int main() {
     while (sample < 10000) {
         ++sample;
         capture(cap_handle, buffer, cap_period_size);
-        for (int i = 0; i < buffer_length; ++i)
+        for (unsigned int i = 0; i < buffer_length; ++i)
             if (i % 2)
                 err_vec.push_back(buffer[i]);
             else
