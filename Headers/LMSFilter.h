@@ -42,9 +42,9 @@ public:
     void lms_filter_update(float update_step) {
         filter_coeffs_array filter_coeffs = fir_filter.get_coefficients();
         for (int i = 0; i < filter_length; ++i) {
-//            filter_coeffs.at(i) = (1.0f - _alpha) * filter_coeffs.at(i)
-//                                  + _samples_buffer.at(i) * update_step;
-            filter_coeffs.at(i) += _samples_buffer.at(i) * update_step;
+            filter_coeffs.at(i) =  filter_coeffs.at(i)
+                                  + _samples_buffer.at(i) * update_step;
+//            filter_coeffs.at(i) += _samples_buffer.at(i) * update_step;
         }
         fir_filter.set_coefficients(filter_coeffs);
     }

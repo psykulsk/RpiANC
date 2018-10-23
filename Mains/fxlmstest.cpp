@@ -7,6 +7,7 @@
 #include "../Headers/FxLMSFilter.h"
 #include "../Headers/test_commons.h"
 #include "../Headers/common.h"
+#include "../Headers/constants.h"
 
 void fxlmstest_fixed() {
     FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH_TEST>::fx_filter_coeffs_array s_filter_coeffs = {
@@ -172,7 +173,7 @@ void fxlmstest() {
 
 int main() {
 //    fxlmstest_recorded_data();
-//    fxlmstest_fixed();
-    fxlmstest();
+    fxlmstest_fixed();
+//    fxlmstest();
     return 0;
 }

@@ -8,6 +8,7 @@
 
 #include <Fir1fixed.h>
 #include "common.h"
+#include "../Headers/constants.h"
 
 
 void processing(fixed_sample_type *samples_buffer, long unsigned int buffer_length);

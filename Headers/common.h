@@ -13,9 +13,6 @@
 
 typedef float sample_type;
 typedef int32_t fixed_sample_type;
-const long unsigned int FILTER_LENGTH = 30;
-const long unsigned int FX_FILTER_LENGTH = 5;
-const sample_type LMS_STEP_SIZE = 0.8;
 const sample_type scale = std::numeric_limits<fixed_sample_type>::max();
 
 sample_type inline signed_fixed_to_floating(fixed_sample_type sample) {
@@ -23,6 +20,10 @@ sample_type inline signed_fixed_to_floating(fixed_sample_type sample) {
 }
 
 fixed_sample_type inline floating_to_signed_fixed(sample_type sample) {
+    if(sample > 1.0f)
+        return std::numeric_limits<fixed_sample_type>::max();
+    if(sample < -1.0f)
+        return std::numeric_limits<fixed_sample_type>::min();
     return static_cast<fixed_sample_type>(scale*sample);
 }
 
