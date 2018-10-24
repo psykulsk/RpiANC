@@ -21,4 +21,5 @@ const FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH>::fx_filter_coeffs_array FX_FI
         0.0041966f,
         0.0237970f
 };
+
 #endif //RPIANC_CONSTANTS_H

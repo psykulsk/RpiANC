@@ -1,4 +1,4 @@
-recorded_file = fopen("recorded_whitenoise.raw","r");
+recorded_file = fopen("rec/recorded_whitenoise.raw","r");
 recorded_noise = fread(recorded_file, Inf, "int32");
 original_file = fopen("whitenoise.raw","r");
 original_noise = fread(original_file, Inf, "int32");
@@ -14,8 +14,8 @@ sigma_d = 0.001;
 x = original_noise(2:2:60000)';
 
 h = [1, 0.8, 0.6, 0.4, 0.2];
-d = filter(h,1,x);
-#d = recorded_noise(1:30000)';
+#d = filter(h,1,x);
+d = recorded_noise(1:30000)';
 
 alpha= [0.0001, 0.0001, 0.0002, 0.0003, 0.0005, 0.001];
 

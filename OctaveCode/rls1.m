@@ -10,7 +10,7 @@ f_n = zeros(L,1);
 x_n = zeros(L,1);
 
 P = gamma*eye(L);
-N
+
 for n = 1:N
         
     x_n = [x(n); x_n(1:end-1,1)];

@@ -1,6 +1,6 @@
-recorded_file = fopen("recorded_whitenoise.dat","r");
+recorded_file = fopen("rec/recorded_whitenoise.dat","r");
+original_file = fopen("rec/right_channel_noise.dat","r");
 recorded_noise = fread(recorded_file, Inf, "int32");
-original_file = fopen("right_channel_noise.dat","r");
 original_noise = fread(original_file, Inf, "int32");
 original_noise = double(original_noise)/double(intmax("int32"));
 recorded_noise = double(recorded_noise)/double(intmax("int32"));
@@ -14,8 +14,8 @@ h = [1, 0.8, -0.6, 0.4, 0.2, -0.3, -0.5, 0.7, 0.1, 0.5];
 
  
 #d = filter(h,1,x);
-d = recorded_noise(1180:30000);
-x = original_noise(1:length(d));
+x = original_noise(1:15000);
+d = recorded_noise(1160:(length(x)+1160));
 #x = randn(1, M);
 #d = filter(h, 1, x);
 L = 5;

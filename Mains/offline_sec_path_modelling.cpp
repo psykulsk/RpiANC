@@ -53,7 +53,6 @@ int main() {
     int sample = 0;
     while (sample < 10000) {
         ++sample;
-        ssize_t rc;
         size_t size = buffer_length * sizeof(fixed_sample_type);
         noise_file.read((char *) play_buffer, size);
 //        rc = read(0, play_buffer, size);

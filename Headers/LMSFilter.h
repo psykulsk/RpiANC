@@ -9,6 +9,7 @@
 #include "common.h"
 #include "FIRFilter.h"
 
+
 template<int filter_length>
 class LMSFilter {
 public:
@@ -24,8 +25,8 @@ public:
     virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample) {
         static sample_type input_signal_power_estimate = 0.0;
         input_signal_power_estimate = (1 - _power_smoothing_factor) * input_signal_power_estimate +
-                                      _power_smoothing_factor * x_reference_sample *
-                                      x_reference_sample;
+                                      _power_smoothing_factor * error_sample *
+                                      error_sample;
         // Shift samples buffer
         for (long int i = filter_length - 1; i >= 1; --i) {
             _samples_buffer[i] = _samples_buffer[i - 1];
@@ -42,7 +43,7 @@ public:
     void lms_filter_update(float update_step) {
         filter_coeffs_array filter_coeffs = fir_filter.get_coefficients();
         for (int i = 0; i < filter_length; ++i) {
-            filter_coeffs.at(i) =  filter_coeffs.at(i)
+            filter_coeffs.at(i) = filter_coeffs.at(i)
                                   + _samples_buffer.at(i) * update_step;
 //            filter_coeffs.at(i) += _samples_buffer.at(i) * update_step;
         }

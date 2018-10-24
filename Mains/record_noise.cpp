@@ -10,7 +10,7 @@
 
 int main() {
 
-    std::ifstream noise_file("whitenoise3.raw", std::ios::binary);
+    std::ifstream noise_file("gaussianwhitenoise.raw", std::ios::binary);
     assert(noise_file.is_open());
 
     std::vector<fixed_sample_type> record_vec;
@@ -34,21 +34,22 @@ int main() {
     init_capture(&cap_handle, &play_freq, &cap_period_size, number_of_channels,
                  capture_device_name);
     snd_pcm_uframes_t buffer_length = cap_period_size * number_of_channels;
-    fixed_sample_type play_buffer[buffer_length];
     fixed_sample_type capture_buffer[buffer_length];
 
 
     snd_pcm_t *play_handle;
     snd_pcm_uframes_t play_device_buffer = 1024;
-    snd_pcm_uframes_t play_period_size = 64;
+    snd_pcm_uframes_t play_period_size = 256;
 
     init_playback(&play_handle, &play_freq, &play_period_size,
                   &play_device_buffer, number_of_channels, playback_device_name);
+    snd_pcm_uframes_t play_buffer_length = play_period_size * number_of_channels;
+    fixed_sample_type play_buffer[play_buffer_length];
 
     int sample = 0;
     while (sample < 3000) {
         ++sample;
-        size_t size = buffer_length * sizeof(fixed_sample_type);
+        size_t size = play_buffer_length * sizeof(fixed_sample_type);
         noise_file.read((char *) play_buffer, size);
         playback(play_handle, play_buffer, cap_period_size);
         for (unsigned long i = 0; i < buffer_length; ++i) {
