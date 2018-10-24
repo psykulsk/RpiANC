@@ -3,7 +3,7 @@ rsync -avz --cvs-exclude ../../RpiANC --exclude "RpiANC/cmake-build-debug" --exc
 && ssh pi@192.168.0.155 "cd ~/RpiANC && make ffANC" 
 mpsyt 'playurl https://www.youtube.com/watch?v=D00TqNbMDNI' &
 #mpsyt 'playurl https://www.youtube.com/watch?v=vuZ4uP279oc' &
-ssh pi@192.168.0.155 "cd ~/RpiANC && ./ffANC" && \
+ssh pi@192.168.0.155 "cd ~/RpiANC && nice -n -20 ./ffANC" && \
 pkill mpsyt && \
 pkill mpv && \
 rsync -avz pi@192.168.0.155:~/RpiANC/rec/ ./audio_files

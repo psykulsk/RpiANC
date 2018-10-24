@@ -34,7 +34,7 @@ public:
         _samples_buffer[0] = x_reference_sample;
         // Update filter coefficients
         lms_filter_update(
-                -(_alpha / (input_signal_power_estimate + 0.1f)) *
+                -(_alpha / (input_signal_power_estimate + 1.0f)) *
                 static_cast<float>(error_sample));
         // Perform filtering step, to generate new y correction sample
         return fir_filter.fir_step(x_reference_sample);
