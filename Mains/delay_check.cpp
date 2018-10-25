@@ -62,7 +62,20 @@ long single_delay_check(long play_buffer_length, snd_pcm_uframes_t buffer_length
 
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    if(argc < 2){
+        std::cerr << "Usage: " << argv[0] << " <NUMBER_OF_TEST_REPETITIONS>" << std::endl;
+        return 1;
+    }
+
+    unsigned long number_of_tests;
+    try {
+       number_of_tests = std::stoul(argv[1], nullptr);
+    } catch(std::invalid_argument const &e) {
+        std::cerr << "Usage: " << argv[0] << " <NUMBER_OF_TEST_REPETITIONS>" << std::endl;
+        return 1;
+    }
 
 
     std::vector<fixed_sample_type> record_vec;
@@ -96,13 +109,13 @@ int main() {
 
     std::vector<long> delay_test_results;
 
-    for (int i = 0; i < 10000; ++i) {
+    for (unsigned long i = 0; i < number_of_tests; ++i) {
         long delay = single_delay_check(play_buffer_length, buffer_length, cap_period_size,
                                         play_handle, cap_handle);
         if (delay != -1) {
             delay_test_results.push_back(delay);
         }
-        usleep(200000);
+        usleep(50000);
     }
 
 
@@ -124,6 +137,4 @@ int main() {
 
     return 0;
 }
-// Created by pitersk on 24.10.18.
-//
 
