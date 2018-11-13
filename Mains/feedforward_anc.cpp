@@ -5,6 +5,7 @@
 #include "../Headers/processing.h"
 #include "../Headers/common.h"
 #define DEPLOYED_ON_RPI
+//#define FEEDFORWARD
 
 int main() {
 
@@ -51,7 +52,11 @@ int main() {
                 err_vec.push_back(buffer[i]);
             else
                 ref_vec.push_back(buffer[i]);
-        processing(buffer, buffer_length);
+#ifdef FEEDFORWARD
+        processing_feedforward_anc(buffer, buffer_length);
+#else
+        processing_feedback_anc(buffer, buffer_length);
+#endif
         for (unsigned int i = 0; i < buffer_length; ++i)
             if (i % 2)
                 corr_vec.push_back(buffer[i]);

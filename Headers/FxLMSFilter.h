@@ -19,7 +19,7 @@ public:
 
     sample_type lms_step(sample_type x_reference_sample, sample_type error_sample) {
         sample_type filtered_x_sample = _s_filter.fir_step(x_reference_sample);
-        return LMSFilter<filter_length>::lms_step(filtered_x_sample, error_sample);
+        return LMSFilter<filter_length>::lms_step(filtered_x_sample, error_sample, x_reference_sample);
     }
 
 private:

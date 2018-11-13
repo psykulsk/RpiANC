@@ -22,7 +22,7 @@ public:
 
     }
 
-    virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample) {
+    virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample, sample_type unfiltered_x_sample = 0.0f) {
         static sample_type input_signal_power_estimate = 0.0;
         input_signal_power_estimate = (1 - _power_smoothing_factor) * input_signal_power_estimate +
                                       _power_smoothing_factor * error_sample *
@@ -37,7 +37,7 @@ public:
                 -(_alpha / (input_signal_power_estimate + 1.0f)) *
                 static_cast<float>(error_sample));
         // Perform filtering step, to generate new y correction sample
-        return fir_filter.fir_step(x_reference_sample);
+        return fir_filter.fir_step(unfiltered_x_sample);
     }
 
     void lms_filter_update(float update_step) {

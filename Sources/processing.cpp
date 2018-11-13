@@ -6,7 +6,7 @@
 #include "../Headers/FxLMSFilter.h"
 #include "../Headers/constants.h"
 
-void processing(fixed_sample_type *samples_buffer, long unsigned int buffer_length) {
+void processing_feedforward_anc(fixed_sample_type *samples_buffer, long unsigned int buffer_length) {
 
     static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
                                                                      FX_FILTER_COEFFS);
@@ -22,4 +22,29 @@ void processing(fixed_sample_type *samples_buffer, long unsigned int buffer_leng
     }
 }
 
+void processing_feedback_anc(fixed_sample_type *samples_buffer, long unsigned int buffer_length) {
+
+    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter_right_channel(LMS_STEP_SIZE,
+                                                                     FX_FILTER_COEFFS);
+    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter_left_channel(LMS_STEP_SIZE,
+                                                                     FX_FILTER_COEFFS);
+    static std::vector<sample_type> output_samples(buffer_length, 0.0);
+    static FIRFilter<FX_FILTER_LENGTH> sec_path_filter_right_channel(FX_FILTER_COEFFS);
+    static FIRFilter<FX_FILTER_LENGTH> sec_path_filter_left_channel(FX_FILTER_COEFFS);
+
+    for (unsigned long i = 1; i < buffer_length; i += 2) {
+        sample_type error_sample_right_channel = signed_fixed_to_floating(samples_buffer[i]);
+        sample_type error_sample_left_channel = signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type reference_sample_right_channel = error_sample_right_channel - output_samples.at(i);
+        sample_type reference_sample_left_channel = error_sample_left_channel - output_samples.at(i-1);
+        sample_type correction_sample_right_channel = fxlms_filter_right_channel.lms_step(reference_sample_right_channel, error_sample_right_channel);
+        sample_type correction_sample_left_channel = fxlms_filter_left_channel.lms_step(reference_sample_left_channel, error_sample_left_channel);
+        output_samples.at(i) = sec_path_filter_right_channel.fir_step(correction_sample_right_channel);
+        output_samples.at(i-1) = sec_path_filter_left_channel.fir_step(correction_sample_left_channel);
+        fixed_sample_type fixed_correction_sample_right_channel = floating_to_signed_fixed(correction_sample_right_channel*OUTPUT_GAIN);
+        fixed_sample_type fixed_correction_sample_left_channel = floating_to_signed_fixed(correction_sample_left_channel*OUTPUT_GAIN);
+        samples_buffer[i] = fixed_correction_sample_right_channel;
+        samples_buffer[i - 1] = fixed_correction_sample_left_channel;
+    }
+}
 
