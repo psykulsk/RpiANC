@@ -15,6 +15,8 @@ int main() {
     ref_vec.reserve(1280000);
     std::vector<fixed_sample_type> corr_vec;
     corr_vec.reserve(1280000);
+    std::vector<fixed_sample_type> corr_vec_2;
+    corr_vec_2.reserve(1280000);
 
 #ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
@@ -60,13 +62,21 @@ int main() {
         for (unsigned int i = 0; i < buffer_length; ++i)
             if (i % 2)
                 corr_vec.push_back(buffer[i]);
+            else
+                corr_vec_2.push_back(buffer[i]);
         playback(play_handle, buffer, cap_period_size);
     }
 
+#ifdef FEEDFORWARD
     save_vector_to_file("rec/err_mic.dat", err_vec);
     save_vector_to_file("rec/ref_mic.dat", ref_vec);
     save_vector_to_file("rec/corr_sig.dat", corr_vec);
-
+#else
+    save_vector_to_file("rec/err_mic_left_channel.dat", err_vec);
+    save_vector_to_file("rec/err_mic_right_channel.dat", ref_vec);
+    save_vector_to_file("rec/corr_sig_left_channel.dat", corr_vec);
+    save_vector_to_file("rec/corr_sig_right_channel.dat", corr_vec_2);
+#endif
     snd_pcm_drain(play_handle);
     snd_pcm_close(play_handle);
 

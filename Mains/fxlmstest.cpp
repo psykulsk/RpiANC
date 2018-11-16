@@ -172,8 +172,8 @@ void fxlmstest() {
 
 
 int main() {
-//    fxlmstest_recorded_data();
-    fxlmstest_fixed();
+    fxlmstest_recorded_data();
+//    fxlmstest_fixed();
 //    fxlmstest();
     return 0;
 }
