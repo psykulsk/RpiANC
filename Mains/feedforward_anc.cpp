@@ -49,12 +49,9 @@ int main() {
 
     int sample = 0;
 
-    double mean_processing_time = 0.0;
-
     while (sample < 12000) {
         ++sample;
         capture(cap_handle, buffer, cap_period_size);
-        auto after_cap = std::chrono::steady_clock::now();
         for (unsigned int i = 0; i < buffer_length; ++i)
             if (i % 2)
                 err_vec.push_back(buffer[i]);
@@ -66,20 +63,13 @@ int main() {
 #else
         processing_feedback_anc(buffer, buffer_length);
 #endif
-        auto after_proc = std::chrono::steady_clock::now();
-        double proc_time = std::chrono::duration<double, std::micro>(
-                after_proc - after_cap).count();
-        std::cout << "Proc time[us]: " << proc_time << '\n';
         for (unsigned int i = 0; i < buffer_length; ++i)
             if (i % 2)
                 corr_vec.push_back(buffer[i]);
             else
                 corr_vec_2.push_back(buffer[i]);
         playback(play_handle, buffer, cap_period_size);
-        mean_processing_time += proc_time;
     }
-    mean_processing_time /= 12000.0;
-    std::cout << "Mean processing time[us]: " << mean_processing_time << '\n';
 
 #ifdef FEEDFORWARD
     save_vector_to_file("rec/err_mic.dat", err_vec);
