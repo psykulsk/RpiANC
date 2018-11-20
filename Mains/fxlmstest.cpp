@@ -170,10 +170,55 @@ void fxlmstest() {
     plt::show();
 }
 
+void feedback_fxlms_test(){
+    FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH_TEST>::fx_filter_coeffs_array s_filter_coeffs = {
+            0.0409337972357249, 0.024043402026782, 0.0119930412581248,
+            0.00483106060833201, 0.00144698955374871,
+            9.30221684750573e-05};
+    FIRFilter<FX_FILTER_LENGTH_TEST> s_filter(s_filter_coeffs);
+    FxLMSFilter<FX_FILTER_LENGTH_TEST, FILTER_LENGTH_TEST> fxlms_filter(1.5, s_filter_coeffs);
+    unsigned long number_of_samples = 5000;
+    double sampling_freq = 20000.0;
+    signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.8, 1000.0, 0.0);
+    signal_vec original_signal = singen(number_of_samples, sampling_freq, 1.0, 100.0, 0.0);
+//    signal_vec reference_signal = original_signal;
+//    std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(),
+//                   reference_signal.begin(),
+//                   std::plus<>());
+    signal_vec reference_signal = signal_vec(number_of_samples, 0.0);
+    signal_vec output;
+    signal_vec error_signal;
+    signal_vec correction_vect;
+    FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter_right_channel(.5,
+                                                                                   FX_FILTER_COEFFS);
+    FIRFilter<FX_FILTER_LENGTH> sec_path_filter_right_channel(FX_FILTER_COEFFS);
+
+    sample_type output_sample = 0.0;
+
+    for (unsigned long i = 0; i < number_of_samples; ++i) {
+        sample_type error_sample_right_channel = reference_signal.at(i) + output_sample;
+        sample_type reference_sample_right_channel = error_sample_right_channel + sec_path_filter_right_channel.fir_step(output_sample);
+        sample_type correction_sample_right_channel = fxlms_filter_right_channel.lms_step(reference_sample_right_channel, error_sample_right_channel);
+        output_sample = correction_sample_right_channel;
+        error_signal.push_back(error_sample_right_channel);
+    }
+    signal_vec x(number_of_samples);
+    std::iota(x.begin(), x.end(), 0);
+    plt::subplot(3, 1, 1);
+    plt::plot(reference_signal);
+    plt::subplot(3, 1, 2);
+    plt::plot(error_signal);
+    plt::subplot(3, 1, 3);
+    plt::semilogy(x, error_signal);
+    plt::show();
+
+}
+
 
 int main() {
     fxlmstest_recorded_data();
-//    fxlmstest_fixed();
-//    fxlmstest();
+    fxlmstest_fixed();
+    fxlmstest();
+    feedback_fxlms_test();
     return 0;
 }
