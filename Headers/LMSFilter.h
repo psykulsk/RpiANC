@@ -27,6 +27,7 @@ public:
         input_signal_power_estimate = (1 - _power_smoothing_factor) * input_signal_power_estimate +
                                       _power_smoothing_factor * error_sample *
                                       error_sample;
+        sample_type power_factor = input_signal_power_estimate+1.0f;
         // Shift samples buffer
         for (long int i = filter_length - 1; i >= 1; --i) {
             _samples_buffer[i] = _samples_buffer[i - 1];
@@ -34,7 +35,7 @@ public:
         _samples_buffer[0] = x_reference_sample;
         // Update filter coefficients
         lms_filter_update(
-                -(_alpha / (input_signal_power_estimate + 1.0f)) *
+                -(_alpha / power_factor) *
                 static_cast<float>(error_sample));
         // Perform filtering step, to generate new y correction sample
         return fir_filter.fir_step(unfiltered_x_sample);

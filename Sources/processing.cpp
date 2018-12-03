@@ -6,8 +6,8 @@
 #include "../Headers/FxLMSFilter.h"
 #include "../Headers/constants.h"
 
-void
-processing_feedforward_anc(fixed_sample_type *samples_buffer, long unsigned int buffer_length) {
+void processing_feedforward_anc(fixed_sample_type *samples_buffer,
+                                long unsigned int buffer_length) {
 
     static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
                                                                      FX_FILTER_COEFFS);
@@ -35,8 +35,10 @@ void processing_feedback_anc(fixed_sample_type *samples_buffer, long unsigned in
     static std::vector<fixed_sample_type> output_samples(buffer_length, 0);
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
-        sample_type error_sample_right_channel = signed_fixed_to_floating(samples_buffer[i]);
-        sample_type error_sample_left_channel = signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type error_sample_right_channel =
+                signed_fixed_to_floating(samples_buffer[i]) + DC_REDUCTION_VALUE;
+        sample_type error_sample_left_channel =
+                signed_fixed_to_floating(samples_buffer[i - 1]) + DC_REDUCTION_VALUE;
         sample_type reference_sample_right_channel = error_sample_right_channel +
                                                      sec_path_filter_right_channel.fir_step(
                                                              signed_fixed_to_floating(
