@@ -22,6 +22,9 @@ public:
         return LMSFilter<filter_length>::lms_step(filtered_x_sample, error_sample, x_reference_sample);
     }
 
+    void set_s_filter_coefficient(fx_filter_coeffs_array new_coeffs){
+        _s_filter.set_coefficients(new_coeffs);
+    }
 private:
     FIRFilter<fx_filter_length> _s_filter;
 

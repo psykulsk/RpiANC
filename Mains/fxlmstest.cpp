@@ -219,32 +219,34 @@ void feedback_fxlms_test() {
 void fb_anc_processing_test() {
     unsigned long number_of_samples = 5000;
     double sampling_freq = 20000.0;
-    signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.8, 1000.0, 0.0);
-    signal_vec original_signal = singen(number_of_samples, sampling_freq, 1.0, 100.0, 0.0);
+    signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.2, 1000.0, 0.0);
+    signal_vec original_signal = singen(number_of_samples, sampling_freq, 0.5, 100.0, 0.0);
     signal_vec reference_signal = original_signal;
-//    std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(),
-//                   reference_signal.begin(),
-//                   std::plus<>());
+    std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(),
+                   reference_signal.begin(),
+                   std::plus<>());
 //    signal_vec reference_signal = signal_vec(number_of_samples, 0.0);
     signal_vec output;
     signal_vec error_signal;
 
 
-    long unsigned int buffer_length = 100;
+    long unsigned int buffer_length = 2;
     fixed_sample_type samples_buffer[buffer_length];
+
+    for (size_t i = 0; i < buffer_length; ++i) {
+        samples_buffer[i] = 0;
+    }
 
 
     for (size_t i = 0; i < number_of_samples / buffer_length; ++i) {
         for (size_t j = 1; j < buffer_length; j += 2) {
-            samples_buffer[j] = floating_to_signed_fixed(
+            samples_buffer[j] += floating_to_signed_fixed(
                     reference_signal.at(i * buffer_length + j - 1));
-            samples_buffer[j - 1] = floating_to_signed_fixed(
+            samples_buffer[j - 1] += floating_to_signed_fixed(
                     reference_signal.at(i * buffer_length + j - 1));
+            error_signal.push_back(signed_fixed_to_floating(samples_buffer[j]));
         }
         processing_feedback_anc(samples_buffer, buffer_length);
-        for (size_t j = 1; j < buffer_length; j += 2) {
-            error_signal.push_back(signed_fixed_to_floating(samples_buffer[j - 1]));
-        }
     }
     signal_vec x(number_of_samples);
     std::iota(x.begin(), x.end(), 0);
@@ -264,6 +266,14 @@ void ff_anc_processing_test() {
     signal_vec original_signal = singen(number_of_samples, sampling_freq, 0.5, 100.0, 0.0);
     signal_vec signal_with_noise = original_signal;
     std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(),
+                   signal_with_noise.begin(),
+                   std::plus<>());
+    noise_signal = singen(number_of_samples, sampling_freq, 0.2, 3000.0, 0.0);
+    std::transform(signal_with_noise.begin(), original_signal.end(), noise_signal.begin(),
+                   signal_with_noise.begin(),
+                   std::plus<>());
+    noise_signal = singen(number_of_samples, sampling_freq, 0.2, 2000.0, 0.0);
+    std::transform(signal_with_noise.begin(), original_signal.end(), noise_signal.begin(),
                    signal_with_noise.begin(),
                    std::plus<>());
     signal_vec output;
@@ -310,11 +320,73 @@ void ff_anc_processing_test() {
 }
 
 
+void ff_anc_sec_path_modelling_processing_test() {
+    unsigned long number_of_samples = 5000;
+    double sampling_freq = 20000.0;
+    signal_vec noise_signal = singen(number_of_samples, sampling_freq, 0.2, 1000.0, 0.0);
+    signal_vec original_signal = singen(number_of_samples, sampling_freq, 0.5, 100.0, 0.0);
+    signal_vec signal_with_noise = original_signal;
+    std::transform(original_signal.begin(), original_signal.end(), noise_signal.begin(),
+                   signal_with_noise.begin(),
+                   std::plus<>());
+    noise_signal = singen(number_of_samples, sampling_freq, 0.2, 3000.0, 0.0);
+    std::transform(signal_with_noise.begin(), original_signal.end(), noise_signal.begin(),
+                   signal_with_noise.begin(),
+                   std::plus<>());
+    noise_signal = singen(number_of_samples, sampling_freq, 0.2, 2000.0, 0.0);
+    std::transform(signal_with_noise.begin(), original_signal.end(), noise_signal.begin(),
+                   signal_with_noise.begin(),
+                   std::plus<>());
+    signal_vec output;
+    signal_vec error_signal;
+    signal_vec correction_signal;
+
+
+    long unsigned int buffer_length = 200;
+
+    fixed_sample_type samples_buffer[buffer_length];
+
+    for (size_t i = 0; i < buffer_length; ++i) {
+        samples_buffer[i] = 0;
+    }
+
+
+    for (size_t i = 0; i < number_of_samples / buffer_length; ++i) {
+        for (size_t j = 0; j < buffer_length; ++j) {
+            if (j % 2 == 0)
+                samples_buffer[j] = floating_to_signed_fixed(
+                        noise_signal.at(i * buffer_length + j));
+            else {
+                samples_buffer[j] += floating_to_signed_fixed(
+                        signal_with_noise.at(i * buffer_length + j));
+                error_signal.push_back(signed_fixed_to_floating(samples_buffer[j]));
+            }
+        }
+        processing_feedforward_anc_sec_path_modelling(samples_buffer, buffer_length);
+
+        for (size_t j = 0; j < buffer_length; ++j) {
+            if (j % 2)
+                correction_signal.push_back(signed_fixed_to_floating(samples_buffer[j]));
+        }
+    }
+    signal_vec x(number_of_samples);
+    std::iota(x.begin(), x.end(), 0);
+    plt::subplot(3, 1, 1);
+    plt::plot(signal_with_noise);
+    plt::subplot(3, 1, 2);
+    plt::plot(correction_signal);
+    plt::subplot(3, 1, 3);
+    plt::plot(error_signal);
+    plt::show();
+}
+
 int main() {
 //    fxlmstest_recorded_data();
 //    fxlmstest_fixed();
 //    fxlmstest();
 //    feedback_fxlms_test();
-    ff_anc_processing_test();
+//    ff_anc_processing_test();
+    ff_anc_sec_path_modelling_processing_test();
+//    fb_anc_processing_test();
     return 0;
 }

@@ -11,6 +11,27 @@ void processing_feedforward_anc(fixed_sample_type *samples_buffer,
 
     static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
                                                                      FX_FILTER_COEFFS);
+    for (unsigned long i = 1; i < buffer_length; i += 2) {
+        // DC_REDUCTION_VALUE added to correct the dc offset in error which causes instability
+        sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]) + DC_REDUCTION_VALUE;
+        sample_type reference_sample = signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type correction_sample = fxlms_filter.lms_step(reference_sample, error_sample);
+        fixed_sample_type fixed_correction_sample = floating_to_signed_fixed(
+                correction_sample * OUTPUT_GAIN);
+        samples_buffer[i] = fixed_correction_sample;
+        samples_buffer[i - 1] = fixed_correction_sample;
+
+    }
+}
+
+void processing_feedforward_anc_sec_path_modelling(fixed_sample_type *samples_buffer,
+                                                   long unsigned int buffer_length) {
+
+    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
+                                                                     FX_FILTER_COEFFS);
+    static LMSFilter<FX_FILTER_LENGTH> sec_path_lms_estimate(SEC_PATH_LMS_STEP_SIZE, FX_FILTER_COEFFS);
+    static std::vector<sample_type> correction_samples_buffer(buffer_length / 2, 0.0f);
+    static sample_type sec_path_estimation_output = 0.0f;
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         // DC_REDUCTION_VALUE added to correct the dc offset in error which causes instability
@@ -21,6 +42,15 @@ void processing_feedforward_anc(fixed_sample_type *samples_buffer,
                 correction_sample * OUTPUT_GAIN);
         samples_buffer[i] = fixed_correction_sample;
         samples_buffer[i - 1] = fixed_correction_sample;
+
+        // Secondary path online modelling
+        sec_path_estimation_output = sec_path_lms_estimate.lms_step(correction_samples_buffer[i/2],
+                                                                    error_sample -
+                                                                    sec_path_estimation_output,
+                                                                    correction_samples_buffer[i/2]);
+        correction_samples_buffer[i/2] = correction_sample;
+        fxlms_filter.set_s_filter_coefficient(sec_path_lms_estimate.fir_filter.get_coefficients());
+
     }
 }
 
@@ -59,6 +89,7 @@ void processing_feedback_anc(fixed_sample_type *samples_buffer, long unsigned in
                 correction_sample_left_channel * OUTPUT_GAIN);
         samples_buffer[i] = fixed_correction_sample_right_channel;
         samples_buffer[i - 1] = fixed_correction_sample_left_channel;
+
     }
 }
 

@@ -19,15 +19,24 @@ public:
     FIRFilter<filter_length> fir_filter;
 
     LMSFilter(float alpha_val) : _alpha{alpha_val}, _lms_coefficients{{0}}, _samples_buffer{{0}} {
-
+        fir_filter.set_coefficients(_lms_coefficients);
     }
 
-    virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample, sample_type unfiltered_x_sample = 0.0f) {
+    LMSFilter(float alpha_val, filter_coeffs_array initial_filter) : _alpha{alpha_val},
+                                                                     _lms_coefficients{
+                                                                             initial_filter},
+                                                                     _samples_buffer{{0}} {
+        fir_filter.set_coefficients(_lms_coefficients);
+    }
+
+    virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample,
+                                 sample_type unfiltered_x_sample) {
         static sample_type input_signal_power_estimate = 0.0;
         input_signal_power_estimate = (1 - _power_smoothing_factor) * input_signal_power_estimate +
                                       _power_smoothing_factor * error_sample *
                                       error_sample;
-        sample_type power_factor = input_signal_power_estimate+1.0f;
+//        sample_type power_factor = input_signal_power_estimate+1.0f;
+        sample_type power_factor = 1.0f;
         // Shift samples buffer
         for (long int i = filter_length - 1; i >= 1; --i) {
             _samples_buffer[i] = _samples_buffer[i - 1];
@@ -46,7 +55,6 @@ public:
         for (int i = 0; i < filter_length; ++i) {
             filter_coeffs.at(i) = filter_coeffs.at(i)
                                   + _samples_buffer.at(i) * update_step;
-//            filter_coeffs.at(i) += _samples_buffer.at(i) * update_step;
         }
         fir_filter.set_coefficients(filter_coeffs);
     }
