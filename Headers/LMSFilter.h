@@ -24,9 +24,9 @@ public:
 
     LMSFilter(float alpha_val, filter_coeffs_array initial_filter) : _alpha{alpha_val},
                                                                      _lms_coefficients{
-                                                                             initial_filter},
-                                                                     _samples_buffer{{0}} {
-        fir_filter.set_coefficients(_lms_coefficients);
+                                                                             0.0},
+                                                                     _samples_buffer{{0.0}} {
+        fir_filter.set_coefficients(initial_filter);
     }
 
     virtual sample_type lms_step(sample_type x_reference_sample, sample_type error_sample,

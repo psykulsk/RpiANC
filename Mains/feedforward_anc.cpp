@@ -8,7 +8,7 @@
 #include "../Headers/common.h"
 
 #define DEPLOYED_ON_RPI
-//#define FEEDFORWARD
+#define FEEDFORWARD
 
 int main() {
 
@@ -59,9 +59,9 @@ int main() {
                 ref_vec.push_back(buffer[i]);
 
 #ifdef FEEDFORWARD
-        processing_feedforward_anc(buffer, buffer_length);
+        processing_feedforward_anc_sec_path_modelling(buffer, buffer_length);
 #else
-        processing_feedback_anc(buffer, buffer_length);
+        processing_feedback_anc_sec_path_modelling(buffer, buffer_length);
 #endif
         for (unsigned int i = 0; i < buffer_length; ++i)
             if (i % 2)
