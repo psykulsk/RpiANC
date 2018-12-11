@@ -2,7 +2,6 @@
 #include <fstream>
 #include <vector>
 #include "../Headers/capture.h"
-#include "../Headers/test_commons.h"
 
 #define DEPLOYED_ON_RPI
 
@@ -12,7 +11,7 @@ int main() {
     std::vector<fixed_sample_type> ref_vec;
 
 #ifdef DEPLOYED_ON_RPI
-    const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
+    const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
 #else
     const std::string capture_device_name = "default";
 #endif

@@ -19,7 +19,7 @@ int main() {
 
 
 #ifdef DEPLOYED_ON_RPI
-    const std::string capture_device_name = "plughw:CARD=sndrpisimplecar,DEV=0";
+    const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
     const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
 #else
     const std::string capture_device_name = "default";
