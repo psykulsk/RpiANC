@@ -385,7 +385,7 @@ void ff_anc_sec_path_modelling_processing_test() {
     signal_vec correction_signal;
 
 
-    long unsigned int buffer_length = 6;
+    long unsigned int buffer_length = 8;
 
     fixed_sample_type samples_buffer[buffer_length];
 
