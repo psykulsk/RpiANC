@@ -385,7 +385,7 @@ void ff_anc_sec_path_modelling_processing_test() {
     signal_vec correction_signal;
 
 
-    long unsigned int buffer_length = 200;
+    long unsigned int buffer_length = 6;
 
     fixed_sample_type samples_buffer[buffer_length];
 
@@ -396,7 +396,7 @@ void ff_anc_sec_path_modelling_processing_test() {
 
     for (size_t i = 0; i < number_of_samples / buffer_length; ++i) {
         for (size_t j = 0; j < buffer_length; ++j) {
-            if (j % 2 == 0)
+            if (j % 2 != 0)
                 samples_buffer[j] = floating_to_signed_fixed(
                         noise_signal.at(i * buffer_length + j));
             else {
@@ -408,7 +408,7 @@ void ff_anc_sec_path_modelling_processing_test() {
         processing_feedforward_anc_sec_path_modelling(samples_buffer, buffer_length);
 
         for (size_t j = 0; j < buffer_length; ++j) {
-            if (j % 2)
+            if (j % 2 == 0)
                 correction_signal.push_back(signed_fixed_to_floating(samples_buffer[j]));
         }
     }
@@ -429,9 +429,9 @@ int main() {
 //    fxlmstest();
 //    feedback_fxlms_test();
 //    ff_anc_processing_test();
-//    ff_anc_sec_path_modelling_processing_test();
+    ff_anc_sec_path_modelling_processing_test();
 //    fb_anc_processing_test();
-    fb_anc_sec_path_modelling_processing_test();
+//    fb_anc_sec_path_modelling_processing_test();
 
     return 0;
 }

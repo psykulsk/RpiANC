@@ -40,7 +40,7 @@ long single_delay_check(long play_buffer_length, snd_pcm_uframes_t buffer_length
         for (unsigned long i = 0; i < buffer_length; ++i) {
             if (i % 2)
                 if (std::abs(capture_buffer[i]) >
-                    std::numeric_limits<fixed_sample_type>::max() * 0.3) {
+                    std::numeric_limits<fixed_sample_type>::max() * 0.1) {
                     end_time = std::chrono::high_resolution_clock::now();
                     peak_found = true;
                     std::cout << "Peak found" << std::endl;

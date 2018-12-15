@@ -65,9 +65,9 @@ int main() {
 #endif
         for (unsigned int i = 0; i < buffer_length; ++i)
             if (i % 2)
-                corr_vec.push_back(buffer[i]);
-            else
                 corr_vec_2.push_back(buffer[i]);
+            else
+                corr_vec.push_back(buffer[i]);
         playback(play_handle, buffer, cap_period_size);
     }
 
