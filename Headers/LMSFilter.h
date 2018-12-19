@@ -55,7 +55,7 @@ public:
 
 private:
     float _alpha;
-    float _lms_leak_factor = 0.999f;
+    float _lms_leak_factor = 0.99999f;
     filter_coeffs_array _lms_coefficients;
     samples_array _samples_buffer;
 };
