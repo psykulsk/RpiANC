@@ -324,7 +324,7 @@ void ff_anc_processing_test() {
     signal_vec correction_signal;
 
 
-    long unsigned int buffer_length = 10;
+    long unsigned int buffer_length = 256;
 
     fixed_sample_type samples_buffer[buffer_length];
 
@@ -428,8 +428,8 @@ int main() {
 //    fxlmstest_fixed();
 //    fxlmstest();
 //    feedback_fxlms_test();
-//    ff_anc_processing_test();
-    ff_anc_sec_path_modelling_processing_test();
+    ff_anc_processing_test();
+//    ff_anc_sec_path_modelling_processing_test();
 //    fb_anc_processing_test();
 //    fb_anc_sec_path_modelling_processing_test();
 

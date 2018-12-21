@@ -11,11 +11,14 @@ void processing_feedforward_anc(fixed_sample_type *samples_buffer,
 
     static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
                                                                      FX_FILTER_COEFFS);
+    static std::vector<sample_type> previous_reference_samples(buffer_length/2, 0.0f);
+
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         // DC_REDUCTION_VALUE added to correct the dc offset in error which causes instability
         sample_type error_sample = INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i]) + DC_REDUCTION_VALUE;
         sample_type reference_sample =INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i - 1]);
-        sample_type correction_sample = fxlms_filter.lms_step(reference_sample, error_sample);
+        sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i/2), error_sample);
+        previous_reference_samples.at(i/2) = reference_sample;
         fixed_sample_type fixed_correction_sample = floating_to_signed_fixed(
                 correction_sample * OUTPUT_GAIN);
         samples_buffer[i] = fixed_correction_sample;
