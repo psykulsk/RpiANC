@@ -13,10 +13,9 @@
 
 long single_delay_check(long play_buffer_length, snd_pcm_uframes_t buffer_length,
                         snd_pcm_uframes_t cap_period_size,
-                        snd_pcm_t *play_handle, snd_pcm_t *cap_handle) {
+                        snd_pcm_t *play_handle, snd_pcm_t *cap_handle,
+                        std::ifstream &noise_file) {
 
-    std::ifstream noise_file("short_tone.raw", std::ios::binary);
-    assert(noise_file.is_open());
 
     int sample = 0;
     std::chrono::high_resolution_clock::time_point start_time;
@@ -24,10 +23,12 @@ long single_delay_check(long play_buffer_length, snd_pcm_uframes_t buffer_length
     bool start = true;
     bool peak_found = false;
 
+    noise_file.clear();
+    noise_file.seekg(0, std::ios::beg);
+
     fixed_sample_type play_buffer[play_buffer_length];
     fixed_sample_type capture_buffer[buffer_length];
-    while (sample < 1000 && !peak_found) {
-
+    while (sample < 3000 && !peak_found) {
         ++sample;
         size_t size = play_buffer_length * sizeof(fixed_sample_type);
         noise_file.read((char *) play_buffer, size);
@@ -48,7 +49,6 @@ long single_delay_check(long play_buffer_length, snd_pcm_uframes_t buffer_length
                 }
         }
     }
-    noise_file.close();
 
     if (peak_found) {
         long delay_us = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -107,17 +107,25 @@ int main(int argc, char* argv[]) {
                   &play_device_buffer, number_of_channels, playback_device_name);
     snd_pcm_uframes_t play_buffer_length = play_period_size * number_of_channels;
 
+    fixed_sample_type play_buffer[play_buffer_length];
+    fixed_sample_type capture_buffer[buffer_length];
     std::vector<long> delay_test_results;
+    std::ifstream noise_file("short_tone.raw", std::ios::binary);
+    assert(noise_file.is_open());
 
     for (unsigned long i = 0; i < number_of_tests; ++i) {
         long delay = single_delay_check(play_buffer_length, buffer_length, cap_period_size,
-                                        play_handle, cap_handle);
+                                        play_handle, cap_handle, noise_file);
         if (delay != -1) {
             delay_test_results.push_back(delay);
         }
-        usleep(50000);
+        usleep(500000);
+        for(int j=0; j<3000; j++){
+            capture(cap_handle, capture_buffer, cap_period_size);
+        }
     }
 
+    noise_file.close();
 
     std::sort(delay_test_results.begin(), delay_test_results.end());
     long min = *delay_test_results.begin();

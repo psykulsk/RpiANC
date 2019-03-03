@@ -8,7 +8,7 @@
 
 #include "common.h"
 
-const long unsigned int FILTER_LENGTH = 256
+const long unsigned int FILTER_LENGTH = 256;
 const long unsigned int FX_FILTER_LENGTH = 7;
 const sample_type LMS_STEP_SIZE = 0.1f;
 const sample_type SEC_PATH_LMS_STEP_SIZE = 0.000001f;
