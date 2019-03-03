@@ -121,3 +121,9 @@ fabric.properties
 # End of https://www.gitignore.io/api/clion
 
 octave-workspace
+
+*.swp
+*.wav
+*.dat
+
+Scripts/audio_files

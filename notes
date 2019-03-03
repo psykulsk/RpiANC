@@ -1,0 +1,12 @@
+Set highest priorities for interrupts:
+ksfotirqd, 1 per core
+irq/59-bcm2835
+irq/__-3f203000
+#irq/83-3f804000
+#irq/84-3f204000
+
+Launch delay measurement before and after setting interrupt priorities.
+
+Launch process with higher priority??
+
+Measure how much time spent processing samples
