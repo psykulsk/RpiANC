@@ -65,17 +65,107 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
     snd_pcm_hw_params_get_period_size(params, play_period_size, &dir);
     snd_pcm_hw_params_get_buffer_size(params, play_buffer_size);
 
-    std::cerr << "Playback params: " << "Capture rate: " << *play_freq << " Period size: "
+    std::cerr << "Playback params: " << "Playback rate: " << *play_freq << " Period size: "
               << *play_period_size <<
               " Buffer size: " << *play_buffer_size << std::endl;
+
+
+    unsigned int val, val2;
+    snd_pcm_uframes_t frames;
+
+    snd_pcm_hw_params_get_access(params,
+                                 (snd_pcm_access_t *) &val);
+    printf("access type = %s\n",
+           snd_pcm_access_name((snd_pcm_access_t) val));
+
+    snd_pcm_hw_params_get_subformat(params,
+                                    (snd_pcm_subformat_t *) &val);
+    printf("subformat = '%s' (%s)\n",
+           snd_pcm_subformat_name((snd_pcm_subformat_t) val),
+           snd_pcm_subformat_description(
+                   (snd_pcm_subformat_t) val));
+
+
+    snd_pcm_hw_params_get_channels(params, &val);
+    printf("channels = %d\n", val);
+
+    snd_pcm_hw_params_get_rate(params, &val, &dir);
+    printf("rate = %d bps\n", val);
+
+    snd_pcm_hw_params_get_period_time(params,
+                                      &val, &dir);
+    printf("period time = %d us\n", val);
+
+    snd_pcm_hw_params_get_period_size(params,
+                                      &frames, &dir);
+    printf("period size = %d frames\nperiod size = %d bytes\n", (int) frames,
+           (int) snd_pcm_frames_to_bytes(*handle, frames));
+
+    snd_pcm_hw_params_get_buffer_time(params,
+                                      &val, &dir);
+    printf("buffer time = %d us\n", val);
+
+    snd_pcm_hw_params_get_buffer_size(params,
+                                      (snd_pcm_uframes_t *) &val);
+    printf("buffer size = %d frames\n", val);
+
+    snd_pcm_hw_params_get_periods(params, &val, &dir);
+    printf("periods per buffer = %d frames\n", val);
+
+    snd_pcm_hw_params_get_period_size_min(params, &frames, &dir);
+    printf(" min period size = %d frames\n", (int) frames);
+
+    snd_pcm_hw_params_get_buffer_size_min(params, &frames);
+    printf(" min buffer size = %d frames\n", (int) frames);
+
+    snd_pcm_hw_params_get_rate_numden(params,
+                                      &val, &val2);
+    printf("exact rate = %d/%d bps\n", val, val2);
+
+    val = snd_pcm_hw_params_get_sbits(params);
+    printf("significant bits = %d\n", val);
+
+    snd_pcm_hw_params_get_tick_time(params,
+                                    &val, &dir);
+    printf("tick time = %d us\n", val);
+
+    val = snd_pcm_hw_params_is_batch(params);
+    printf("is batch = %d\n", val);
+
+    val = snd_pcm_hw_params_is_block_transfer(params);
+    printf("is block transfer = %d\n", val);
+
+    val = snd_pcm_hw_params_is_double(params);
+    printf("is double = %d\n", val);
+
+    val = snd_pcm_hw_params_is_half_duplex(params);
+    printf("is half duplex = %d\n", val);
+
+    val = snd_pcm_hw_params_is_joint_duplex(params);
+    printf("is joint duplex = %d\n", val);
+
+    val = snd_pcm_hw_params_can_overrange(params);
+    printf("can overrange = %d\n", val);
+
+    val = snd_pcm_hw_params_can_mmap_sample_resolution(params);
+    printf("can mmap = %d\n", val);
+
+    val = snd_pcm_hw_params_can_pause(params);
+    printf("can pause = %d\n", val);
+
+    val = snd_pcm_hw_params_can_resume(params);
+    printf("can resume = %d\n", val);
+
+    val = snd_pcm_hw_params_can_sync_start(params);
+    printf("can sync start = %d\n", val);
 
     snd_pcm_hw_params_free(params);
 }
 
 void playback(snd_pcm_t *play_handle, fixed_sample_type *play_buffer,
-              snd_pcm_uframes_t play_period_size) {
+              snd_pcm_uframes_t frames_in_period) {
     ssize_t rc;
-    rc = snd_pcm_writei(play_handle, play_buffer, play_period_size);
+    rc = snd_pcm_writei(play_handle, play_buffer, frames_in_period);
     if (rc == -EPIPE) {
         /* EPIPE means underrun */
         fprintf(stderr, "playback underrun occurred\n");
@@ -86,7 +176,7 @@ void playback(snd_pcm_t *play_handle, fixed_sample_type *play_buffer,
         fprintf(stderr,
                 "playback error from writei: %s\n",
                 snd_strerror(rc));
-    } else if (rc != (int) play_period_size) {
+    } else if (rc != (int) frames_in_period) {
         fprintf(stderr,
                 "playback short write, write %ld frames\n", rc);
     }
