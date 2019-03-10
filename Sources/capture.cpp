@@ -68,9 +68,9 @@ void init_capture(snd_pcm_t **cap_handle, unsigned int *cap_freq, snd_pcm_uframe
 }
 
 void capture(snd_pcm_t *cap_handle, fixed_sample_type *cap_buffer,
-             snd_pcm_uframes_t cap_period_size){
+             snd_pcm_uframes_t frames_in_cap_period){
     long int rc;
-    rc = snd_pcm_readi(cap_handle, cap_buffer, cap_period_size);
+    rc = snd_pcm_readi(cap_handle, cap_buffer, frames_in_cap_period);
     if (rc == -EPIPE) {
         /* EPIPE means overrun */
         fprintf(stderr, "overrun occurred\n");
@@ -79,7 +79,7 @@ void capture(snd_pcm_t *cap_handle, fixed_sample_type *cap_buffer,
         fprintf(stderr,
                 "error from read: %s\n",
                 snd_strerror(rc));
-    } else if (rc != (int)cap_period_size) {
+    } else if (rc != (int)frames_in_cap_period) {
         fprintf(stderr, "short read, read %ld frames\n", rc);
     }
 }

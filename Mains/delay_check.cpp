@@ -29,55 +29,59 @@ single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes_t fr
     noise_file.seekg(0, std::ios::beg);
 
     ssize_t bytes_in_play_period = snd_pcm_frames_to_bytes(play_handle, frames_in_play_period);
-    ssize_t bytes_in_cap_period = snd_pcm_frames_to_bytes(cap_handle, frames_in_cap_period);
 
-    fixed_sample_type play_buffer[frames_in_play_period*NR_OF_CHANNELS];
-    fixed_sample_type capture_buffer[frames_in_cap_period*NR_OF_CHANNELS];
+    fixed_sample_type play_buffer[frames_in_play_period * NR_OF_CHANNELS];
+    fixed_sample_type capture_buffer[frames_in_cap_period * NR_OF_CHANNELS];
     long delay_us;
     long nr_of_samples = 1000;
+
+    fixed_sample_type threshold = std::numeric_limits<fixed_sample_type>::max() * 0.052f;
+
 #pragma omp parallel sections
     {
 #pragma omp section
         {
             int sample = 0;
             while (sample < nr_of_samples) {
+                if (start) {
+                    start_time = std::chrono::high_resolution_clock::now();
+                    start = false;
+                }
                 ++sample;
                 noise_file.read((char *) play_buffer, bytes_in_play_period);
                 playback(play_handle, play_buffer, frames_in_play_period);
             }
-
         }
 #pragma omp section
         {
-//            int sample = 0;
-//            while (sample < nr_of_samples * 4 && !peak_found) {
-//                ++sample;
-//                if (start) {
-//                    start_time = std::chrono::high_resolution_clock::now();
-//                    start = false;
-//                }
-//                capture(cap_handle, capture_buffer, bytes_in_cap_period);
+            bool info_printed = false;
+            int sample = 0;
+            while (sample < nr_of_samples * 4) {
+                ++sample;
+                capture(cap_handle, capture_buffer, frames_in_cap_period);
 //                double sum = 0.0;
-//                for (unsigned long i = 0; i < frames_in_cap_period; ++i) {
-////                    if (i % 2) {
-////                        if (std::abs(capture_buffer[i]) >
-////                            std::numeric_limits<fixed_sample_type>::max() * 0.05) {
-////                            end_time = std::chrono::high_resolution_clock::now();
-////                            peak_found = true;
-////                            std::cout << "Peak found" << std::endl;
-////                            break;
-////                        }
-//                    sum += (double) (std::abs(capture_buffer[i]));
-//                }
+                for (unsigned long i = 0;
+                     i < frames_in_cap_period * NR_OF_CHANNELS && !peak_found; ++i) {
+                    if (i % 2) {
+                        if (std::abs(capture_buffer[i]) > threshold) {
+                            end_time = std::chrono::high_resolution_clock::now();
+                            peak_found = true;
+                            std::cout << "Peak found" << std::endl;
+                            break;
+                        }
+//                        sum += (double) (std::abs(capture_buffer[i]));
+                    }
+                }
 //                double avg = sum / (std::numeric_limits<fixed_sample_type>::max() *
-//                                    ((double) frames_in_cap_period / 2.0));
+//                                    (double) frames_in_cap_period);
 //                std::cout << "Avg: " << avg << std::endl;
-//            }
-//            if (peak_found) {
-//                delay_us = std::chrono::duration_cast<std::chrono::microseconds>(
-//                        end_time - start_time).count();
-//                std::cout << "Delay: " << delay_us << " us" << std::endl;
-//            }
+                if (peak_found && !info_printed) {
+                    delay_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                            end_time - start_time).count();
+                    std::cout << "Delay: " << delay_us << " us" << std::endl;
+                    info_printed = true;
+                }
+            }
         }
     }
 
@@ -121,24 +125,21 @@ int main(int argc, char *argv[]) {
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
     unsigned int number_of_channels = 2;
-    snd_pcm_uframes_t cap_period_size = 64;
+    snd_pcm_uframes_t cap_frames_per_period = 64;
 
-    init_capture(&cap_handle, &play_freq, &cap_period_size, number_of_channels,
+    init_capture(&cap_handle, &play_freq, &cap_frames_per_period, number_of_channels,
                  capture_device_name);
-    snd_pcm_uframes_t buffer_length = cap_period_size * number_of_channels;
-
 
     snd_pcm_t *play_handle;
-    snd_pcm_uframes_t play_period_size = 256;
-    snd_pcm_uframes_t play_device_buffer = 4 * play_period_size;
+    snd_pcm_uframes_t play_frames_per_period= 256;
+    snd_pcm_uframes_t play_frames_per_device_buffer = 8 * play_frames_per_period;
 
-    init_playback(&play_handle, &play_freq, &play_period_size,
-                  &play_device_buffer, number_of_channels, playback_device_name);
-    snd_pcm_uframes_t play_frame_length = play_period_size * 4 * 2;
+    init_playback(&play_handle, &play_freq, &play_frames_per_period,
+                  &play_frames_per_device_buffer, number_of_channels, playback_device_name);
 
-    fixed_sample_type capture_buffer[buffer_length];
+    fixed_sample_type capture_buffer[cap_frames_per_period*NR_OF_CHANNELS];
     std::vector<long> delay_test_results;
-    std::ifstream noise_file("tone_square_spaces.raw", std::ios::binary | std::ios::in);
+    std::ifstream noise_file("tone_sine_5k.raw", std::ios::binary | std::ios::in);
     if (!noise_file.is_open()) {
         std::cout << "File not opened" << std::endl;
         return -1;
@@ -149,20 +150,23 @@ int main(int argc, char *argv[]) {
     }
 
     for (unsigned long i = 0; i < number_of_tests; ++i) {
-        long delay = single_delay_check(play_period_size, cap_period_size, play_handle, cap_handle,
+        long delay = single_delay_check(play_frames_per_period, cap_frames_per_period, play_handle,
+                                        cap_handle,
                                         noise_file);
         if (delay != -1) {
             delay_test_results.push_back(delay);
         }
-//        usleep(50000);
-//        for (int j = 0; j < 3000; j++) {
-//            capture(cap_handle, capture_buffer, cap_period_size);
-//        }
+        usleep(50000);
+        for (int j = 0; j < 3000; j++) {
+            capture(cap_handle, capture_buffer, cap_frames_per_period);
+        }
     }
 
     noise_file.close();
 
-    if (delay_test_results.size() > 0) {
+    if (delay_test_results.size() > 1) {
+//        Remove first, flawed element of results
+        delay_test_results.erase(delay_test_results.begin());
         std::sort(delay_test_results.begin(), delay_test_results.end());
         long min = *delay_test_results.begin();
         long max = *(delay_test_results.end() - 1);
