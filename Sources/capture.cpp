@@ -73,7 +73,7 @@ void capture(snd_pcm_t *cap_handle, fixed_sample_type *cap_buffer,
     rc = snd_pcm_readi(cap_handle, cap_buffer, frames_in_cap_period);
     if (rc == -EPIPE) {
         /* EPIPE means overrun */
-        fprintf(stderr, "overrun occurred\n");
+        fprintf(stderr, "capture overrun occurred\n");
         snd_pcm_prepare(cap_handle);
     } else if (rc < 0) {
         fprintf(stderr,

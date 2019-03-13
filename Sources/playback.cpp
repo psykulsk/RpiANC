@@ -70,7 +70,7 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
               " Buffer size: " << *play_buffer_size << std::endl;
 
 
-    unsigned int val, val2;
+    int val, val2;
     snd_pcm_uframes_t frames;
 
     snd_pcm_hw_params_get_access(params,

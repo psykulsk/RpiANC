@@ -9,6 +9,7 @@
 #include "../Headers/processing.h"
 #include <algorithm>
 #include <omp.h>
+#include <cmath>
 
 #define DEPLOYED_ON_RPI
 
@@ -33,22 +34,30 @@ single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes_t fr
     fixed_sample_type play_buffer[frames_in_play_period * NR_OF_CHANNELS];
     fixed_sample_type capture_buffer[frames_in_cap_period * NR_OF_CHANNELS];
     long delay_us;
-    long nr_of_samples = 1000;
+    long nr_of_samples = 50;
 
     fixed_sample_type threshold = std::numeric_limits<fixed_sample_type>::max() * 0.052f;
 
+
+    omp_lock_t capture_lock;
+    omp_init_lock(&capture_lock);
+    omp_set_lock(&capture_lock);
 #pragma omp parallel sections
     {
 #pragma omp section
         {
+            unsigned int rand_sleep_time = 100 + std::rand() % 500;
+            usleep(rand_sleep_time);
             int sample = 0;
             while (sample < nr_of_samples) {
+                ++sample;
+                noise_file.read((char *) play_buffer, bytes_in_play_period);
                 if (start) {
                     start_time = std::chrono::high_resolution_clock::now();
                     start = false;
+                    std::cout << "Freeing lock" << std::endl;
+                    omp_unset_lock(&capture_lock);
                 }
-                ++sample;
-                noise_file.read((char *) play_buffer, bytes_in_play_period);
                 playback(play_handle, play_buffer, frames_in_play_period);
             }
         }
@@ -56,34 +65,38 @@ single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes_t fr
         {
             bool info_printed = false;
             int sample = 0;
+            omp_set_lock(&capture_lock);
             while (sample < nr_of_samples * 4) {
-                ++sample;
-                capture(cap_handle, capture_buffer, frames_in_cap_period);
+                    ++sample;
+                    capture(cap_handle, capture_buffer, frames_in_cap_period);
 //                double sum = 0.0;
-                for (unsigned long i = 0;
-                     i < frames_in_cap_period * NR_OF_CHANNELS && !peak_found; ++i) {
-                    if (i % 2) {
-                        if (std::abs(capture_buffer[i]) > threshold) {
-                            end_time = std::chrono::high_resolution_clock::now();
-                            peak_found = true;
-                            std::cout << "Peak found" << std::endl;
-                            break;
-                        }
+                    for (unsigned long i = 0;
+                         i < frames_in_cap_period * NR_OF_CHANNELS && !peak_found; ++i) {
+                        if (i % 2) {
+                            if (std::abs(capture_buffer[i]) > threshold) {
+                                end_time = std::chrono::high_resolution_clock::now();
+                                peak_found = true;
+                                std::cout << "Peak found" << std::endl;
+                                break;
+                            }
 //                        sum += (double) (std::abs(capture_buffer[i]));
+                        }
                     }
-                }
 //                double avg = sum / (std::numeric_limits<fixed_sample_type>::max() *
 //                                    (double) frames_in_cap_period);
 //                std::cout << "Avg: " << avg << std::endl;
-                if (peak_found && !info_printed) {
-                    delay_us = std::chrono::duration_cast<std::chrono::microseconds>(
-                            end_time - start_time).count();
-                    std::cout << "Delay: " << delay_us << " us" << std::endl;
-                    info_printed = true;
-                }
+                    if (peak_found && !info_printed) {
+                        delay_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                                end_time - start_time).count();
+                        std::cout << "Delay: " << delay_us << " us" << std::endl;
+                        info_printed = true;
+                        break;
+
+                    }
             }
         }
     }
+    omp_destroy_lock(&capture_lock);
 
 
     if (peak_found) {
@@ -93,6 +106,16 @@ single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes_t fr
         return -1;
     }
 
+}
+
+double std_deviation(std::vector<long> delays, double mean) {
+    double var = 0;
+    for (long delay : delays) {
+        double delayf = (double) delay;
+        var += (delayf - mean) * (delayf - mean);
+    }
+    var /= (double) delays.size();
+    return std::sqrt(var);
 }
 
 int main(int argc, char *argv[]) {
@@ -131,13 +154,13 @@ int main(int argc, char *argv[]) {
                  capture_device_name);
 
     snd_pcm_t *play_handle;
-    snd_pcm_uframes_t play_frames_per_period= 256;
+    snd_pcm_uframes_t play_frames_per_period = 512;
     snd_pcm_uframes_t play_frames_per_device_buffer = 8 * play_frames_per_period;
 
     init_playback(&play_handle, &play_freq, &play_frames_per_period,
                   &play_frames_per_device_buffer, number_of_channels, playback_device_name);
 
-    fixed_sample_type capture_buffer[cap_frames_per_period*NR_OF_CHANNELS];
+    fixed_sample_type capture_buffer[cap_frames_per_period * NR_OF_CHANNELS];
     std::vector<long> delay_test_results;
     std::ifstream noise_file("tone_sine_5k.raw", std::ios::binary | std::ios::in);
     if (!noise_file.is_open()) {
@@ -157,7 +180,7 @@ int main(int argc, char *argv[]) {
             delay_test_results.push_back(delay);
         }
         usleep(50000);
-        for (int j = 0; j < 3000; j++) {
+        for (int j = 0; j < 50; j++) {
             capture(cap_handle, capture_buffer, cap_frames_per_period);
         }
     }
@@ -177,8 +200,11 @@ int main(int argc, char *argv[]) {
         }
         average /= static_cast<double>(delay_test_results.size());
 
+        double deviation = std_deviation(delay_test_results, average);
+
         std::cout << "Min: " << min << " Max: " << max << " avg: " << average << " median: "
-                  << delay_test_results.at(delay_test_results.size() / 2) << std::endl;
+                  << delay_test_results.at(delay_test_results.size() / 2)
+                  << " std deviation: " << deviation << std::endl;
     }
 
     snd_pcm_drain(play_handle);
@@ -186,4 +212,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
