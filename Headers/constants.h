@@ -8,6 +8,7 @@
 
 #include "common.h"
 
+const size_t NR_OF_CHANNELS = 2;
 const long unsigned int FILTER_LENGTH = 256;
 const long unsigned int FX_FILTER_LENGTH = 7;
 const sample_type LMS_STEP_SIZE = 0.1f;

@@ -4,9 +4,33 @@
 #include <fstream>
 #include <algorithm>
 #include "../Headers/delay_tests.h"
-#include "../Headers/constants.h"
 
 #define DEPLOYED_ON_RPI
+
+const bool SILENT = false;
+
+const size_t PLAY_FRAMES_PER_PERIOD = 512;
+const size_t PLAY_PERIODS_PER_BUFFER = 8;
+const size_t CAP_FRAMES_PER_PERIOD = 64;
+const size_t CAP_PERIODS_PER_BUFFER = 8;
+
+template<int nr_of_samples>
+struct GeneratedAudio {
+    GeneratedAudio(bool silent) : sample_array() {
+        for (auto i = 0; i < nr_of_samples; ++i) {
+            if (silent) {
+                sample_array[i] = 0;
+            } else {
+                if (i % 2)
+                    sample_array[i] = std::numeric_limits<fixed_sample_type>::max();
+                else
+                    sample_array[i] = std::numeric_limits<fixed_sample_type>::min();
+            }
+        }
+    }
+
+    fixed_sample_type sample_array[nr_of_samples];
+};
 
 int main(int argc, char *argv[]) {
 
@@ -38,34 +62,26 @@ int main(int argc, char *argv[]) {
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
     unsigned int number_of_channels = 2;
-    snd_pcm_uframes_t cap_frames_per_period = 64;
+    snd_pcm_uframes_t cap_frames_per_period = CAP_FRAMES_PER_PERIOD;
 
     init_capture(&cap_handle, &play_freq, &cap_frames_per_period, number_of_channels,
                  capture_device_name);
 
     snd_pcm_t *play_handle;
-    snd_pcm_uframes_t play_frames_per_period = 512;
-    snd_pcm_uframes_t play_frames_per_device_buffer = 8 * play_frames_per_period;
+    snd_pcm_uframes_t play_frames_per_period = PLAY_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t play_frames_per_device_buffer = PLAY_PERIODS_PER_BUFFER * PLAY_FRAMES_PER_PERIOD;
 
     init_playback(&play_handle, &play_freq, &play_frames_per_period,
                   &play_frames_per_device_buffer, number_of_channels, playback_device_name);
 
     fixed_sample_type capture_buffer[cap_frames_per_period * NR_OF_CHANNELS];
+    auto generated_audio = GeneratedAudio<PLAY_FRAMES_PER_PERIOD * NR_OF_CHANNELS>(SILENT);
     std::vector<long> delay_test_results;
-    std::ifstream noise_file("tone_sine_5k.raw", std::ios::binary | std::ios::in);
-    if (!noise_file.is_open()) {
-        std::cout << "File not opened" << std::endl;
-        return -1;
-    }
-    if (!noise_file.good()) {
-        std::cout << "File not good" << std::endl;
-        return -1;
-    }
+    std::ifstream noise_file;
 
     for (unsigned long i = 0; i < number_of_tests; ++i) {
         long delay = single_delay_check(play_frames_per_period, cap_frames_per_period, play_handle,
-                                        cap_handle,
-                                        noise_file);
+                                        cap_handle, noise_file, generated_audio.sample_array);
         if (delay != -1) {
             delay_test_results.push_back(delay);
         }
@@ -75,7 +91,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    noise_file.close();
 
     if (delay_test_results.size() > 1) {
 //        Remove first, flawed element of results
