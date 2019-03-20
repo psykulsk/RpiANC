@@ -22,4 +22,9 @@ const std::array<sample_type, FX_FILTER_LENGTH> FX_FILTER_COEFFS = {
         1.0f
 };
 
+const size_t PLAY_FRAMES_PER_PERIOD = 512;
+const size_t PLAY_PERIODS_PER_BUFFER = 8;
+const size_t CAP_FRAMES_PER_PERIOD = 64;
+const size_t CAP_PERIODS_PER_BUFFER = 8;
+
 #endif //RPIANC_CONSTANTS_H

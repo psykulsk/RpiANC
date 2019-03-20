@@ -42,10 +42,6 @@ add_executable(delayCheck Mains/delay_check.cpp ${SOURCE_FILES} ${SOUND_INTERFAC
 target_include_directories(delayCheck PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(delayCheck asound ${PYTHON_LIBRARIES})
 
-add_executable(delayCheckGenAudio Mains/delay_check_generated_audio.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
-target_include_directories(delayCheckGenAudio PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(delayCheckGenAudio asound ${PYTHON_LIBRARIES})
-
 add_executable(recTestData Mains/record_test_data.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(recTestData PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(recTestData asound ${PYTHON_LIBRARIES})

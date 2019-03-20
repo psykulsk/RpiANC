@@ -8,6 +8,8 @@
 
 #define DEPLOYED_ON_RPI
 
+const bool GENERATE_AUDIO = true;
+
 int main(int argc, char *argv[]) {
 
     if (argc < 2) {
@@ -64,8 +66,7 @@ int main(int argc, char *argv[]) {
 
     for (unsigned long i = 0; i < number_of_tests; ++i) {
         long delay = single_delay_check(play_frames_per_period, cap_frames_per_period, play_handle,
-                                        cap_handle,
-                                        noise_file);
+                                        cap_handle, noise_file, GENERATE_AUDIO);
         if (delay != -1) {
             delay_test_results.push_back(delay);
         }

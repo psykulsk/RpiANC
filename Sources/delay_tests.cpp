@@ -6,8 +6,7 @@
 #include "../Headers/delay_tests.h"
 
 long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes_t frames_in_cap_period,
-                        snd_pcm_t *play_handle, snd_pcm_t *cap_handle, std::ifstream &noise_file,
-                        fixed_sample_type *play_samples) {
+                        snd_pcm_t *play_handle, snd_pcm_t *cap_handle, std::ifstream &noise_file, bool generate_audio) {
 
 
     std::chrono::high_resolution_clock::time_point start_time;
@@ -24,6 +23,10 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
 
     float threshold = std::numeric_limits<fixed_sample_type>::max() * 0.053f;
 
+    auto silence_samples = GeneratedAudio<PLAY_FRAMES_PER_PERIOD * NR_OF_CHANNELS>(true);
+    auto pitch_samples = GeneratedAudio<PLAY_FRAMES_PER_PERIOD * NR_OF_CHANNELS>(false);
+
+    long nr_of_silence_samples = random() % 16;
 
     omp_lock_t capture_lock;
     omp_init_lock(&capture_lock);
@@ -32,23 +35,35 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
     {
 #pragma omp section
         {
-            unsigned int rand_sleep_time = 100 + std::rand() % 500;
-            usleep(rand_sleep_time);
+//            unsigned int rand_sleep_time = 100 + std::rand() % 500;
+//            usleep(rand_sleep_time);
             int sample = 0;
             while (sample < nr_of_samples) {
                 ++sample;
-                if (play_samples == nullptr)
+                if (!generate_audio) {
                     noise_file.read((char *) play_buffer, bytes_in_play_period);
-                if (start) {
-                    start_time = std::chrono::high_resolution_clock::now();
-                    start = false;
-                    std::cout << "Freeing lock" << std::endl;
-                    omp_unset_lock(&capture_lock);
-                }
-                if (play_samples == nullptr)
+                    if (start) {
+                        start_time = std::chrono::high_resolution_clock::now();
+                        start = false;
+                        std::cout << "Freeing lock" << std::endl;
+                        omp_unset_lock(&capture_lock);
+                    }
                     playback(play_handle, play_buffer, frames_in_play_period);
-                else
+                } else {
+                    fixed_sample_type *play_samples;
+                    if (sample < nr_of_silence_samples)
+                        play_samples = silence_samples.sample_array;
+                    else {
+                        if (start) {
+                            start_time = std::chrono::high_resolution_clock::now();
+                            start = false;
+                            std::cout << "Freeing lock" << std::endl;
+                            omp_unset_lock(&capture_lock);
+                        }
+                        play_samples = pitch_samples.sample_array;
+                    }
                     playback(play_handle, play_samples, frames_in_play_period);
+                }
             }
         }
 #pragma omp section
