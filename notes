@@ -1,3 +1,8 @@
+TODO:
+Run delayCheck after setting priorities
+Try to isolate cpu core with cgroups and run delayCheck
+Try to recompile alsa driver to allow smaller buffers (bcm2835 driver, that is used for playback)
+
 Set highest priorities for interrupts:
 ksfotirqd, 1 per core
 irq/59-bcm2835
