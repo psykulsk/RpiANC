@@ -125,8 +125,7 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
     val = snd_pcm_hw_params_get_sbits(params);
     printf("significant bits = %d\n", val);
 
-    snd_pcm_hw_params_get_tick_time(params,
-                                    &val, &dir);
+    snd_pcm_hw_params_get_tick_time(params, &val, &dir);
     printf("tick time = %d us\n", val);
 
     val = snd_pcm_hw_params_is_batch(params);
@@ -159,7 +158,19 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
     val = snd_pcm_hw_params_can_sync_start(params);
     printf("can sync start = %d\n", val);
 
+    if (*play_period_size != PLAY_FRAMES_PER_PERIOD) {
+        std::cout << "Number of play frames per period ( " << *play_period_size << " ) then configuration ( "
+                  << PLAY_FRAMES_PER_PERIOD << " )" << std::endl;
+        exit(1);
+    } else if (*play_buffer_size != PLAY_FRAMES_PER_PERIOD * PLAY_PERIODS_PER_BUFFER) {
+        std::cout << "Number of play frames per device buffer( " << *play_buffer_size
+                  << " ) then configuration ( " << PLAY_FRAMES_PER_PERIOD * PLAY_PERIODS_PER_BUFFER << " )"
+                  << std::endl;
+        exit(1);
+    }
+
     snd_pcm_hw_params_free(params);
+    snd_pcm_prepare(*handle);
 }
 
 void playback(snd_pcm_t *play_handle, fixed_sample_type *play_buffer,

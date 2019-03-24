@@ -19,14 +19,15 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
     fixed_sample_type capture_buffer[frames_in_cap_period * NR_OF_CHANNELS];
     fixed_sample_type play_buffer[frames_in_play_period * NR_OF_CHANNELS];
     long delay_us;
-    long nr_of_samples = 50;
+    long nr_of_samples = 100;
 
-    float threshold = std::numeric_limits<fixed_sample_type>::max() * 0.053f;
+    float threshold = std::numeric_limits<fixed_sample_type>::max() * 0.88f;
 
     auto silence_samples = GeneratedAudio<PLAY_FRAMES_PER_PERIOD * NR_OF_CHANNELS>(true);
     auto pitch_samples = GeneratedAudio<PLAY_FRAMES_PER_PERIOD * NR_OF_CHANNELS>(false);
 
     long nr_of_silence_samples = random() % 16;
+    bool info_printed = false;
 
     omp_lock_t capture_lock;
     omp_init_lock(&capture_lock);
@@ -57,10 +58,10 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
                         if (start) {
                             start_time = std::chrono::high_resolution_clock::now();
                             start = false;
-                            std::cout << "Freeing lock" << std::endl;
+//                            std::cout << "Freeing lock" << std::endl;
                             omp_unset_lock(&capture_lock);
                         }
-                        play_samples = pitch_samples.sample_array;
+                        play_samples = silence_samples.sample_array;
                     }
                     playback(play_handle, play_samples, frames_in_play_period);
                 }
@@ -68,34 +69,31 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
         }
 #pragma omp section
         {
-            bool info_printed = false;
             int sample = 0;
             omp_set_lock(&capture_lock);
-            while (sample < nr_of_samples * 4) {
+            while (sample < nr_of_samples ) {
                 ++sample;
                 capture(cap_handle, capture_buffer, frames_in_cap_period);
-//                double sum = 0.0;
+                double sum = 0.0;
                 for (unsigned long i = 0; i < frames_in_cap_period * NR_OF_CHANNELS && !peak_found; ++i) {
                     if (i % 2) {
                         if (std::abs(capture_buffer[i]) > threshold) {
                             end_time = std::chrono::high_resolution_clock::now();
                             peak_found = true;
-                            std::cout << "Peak found" << std::endl;
+                            std::cout << "Peak found after " << sample << " periods." << std::endl;
                             break;
                         }
-//                        sum += (double) (std::abs(capture_buffer[i]));
+                        sum += (double) (std::abs(capture_buffer[i]));
                     }
                 }
-//                double avg = sum / (std::numeric_limits<fixed_sample_type>::max() *
-//                                    (double) frames_in_cap_period);
-//                std::cout << "Avg: " << avg << std::endl;
+                double avg = sum / ((double)std::numeric_limits<fixed_sample_type>::max() *
+                                    (double) frames_in_cap_period);
+                std::cout << "Avg: " << avg << std::endl;
                 if (peak_found && !info_printed) {
                     delay_us = std::chrono::duration_cast<std::chrono::microseconds>(
                             end_time - start_time).count();
                     std::cout << "Delay: " << delay_us << " us" << std::endl;
                     info_printed = true;
-                    break;
-
                 }
             }
         }

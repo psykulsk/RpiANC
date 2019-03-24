@@ -39,20 +39,22 @@ int main(int argc, char *argv[]) {
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
-    unsigned int number_of_channels = 2;
-    snd_pcm_uframes_t cap_frames_per_period = 64;
+    unsigned int number_of_channels = NR_OF_CHANNELS;
+    snd_pcm_uframes_t cap_frames_per_period = CAP_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t cap_frames_per_device_buffer = CAP_PERIODS_PER_BUFFER * CAP_FRAMES_PER_PERIOD;
 
-    init_capture(&cap_handle, &play_freq, &cap_frames_per_period, number_of_channels,
+    init_capture(&cap_handle, &play_freq, &cap_frames_per_period, &cap_frames_per_device_buffer, NR_OF_CHANNELS,
                  capture_device_name);
 
     snd_pcm_t *play_handle;
-    snd_pcm_uframes_t play_frames_per_period = 512;
-    snd_pcm_uframes_t play_frames_per_device_buffer = 8 * play_frames_per_period;
+    snd_pcm_uframes_t play_frames_per_period = PLAY_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t play_frames_per_device_buffer = PLAY_PERIODS_PER_BUFFER * PLAY_FRAMES_PER_PERIOD;
 
     init_playback(&play_handle, &play_freq, &play_frames_per_period,
                   &play_frames_per_device_buffer, number_of_channels, playback_device_name);
 
-    fixed_sample_type capture_buffer[cap_frames_per_period * NR_OF_CHANNELS];
+
+    fixed_sample_type capture_buffer[cap_frames_per_period];
     std::vector<long> delay_test_results;
     std::ifstream noise_file("tone_sine_5k.raw", std::ios::binary | std::ios::in);
     if (!noise_file.is_open()) {
@@ -65,15 +67,20 @@ int main(int argc, char *argv[]) {
     }
 
     for (unsigned long i = 0; i < number_of_tests; ++i) {
+        snd_pcm_prepare(cap_handle);
+        snd_pcm_prepare(play_handle);
         long delay = single_delay_check(play_frames_per_period, cap_frames_per_period, play_handle,
                                         cap_handle, noise_file, GENERATE_AUDIO);
         if (delay != -1) {
             delay_test_results.push_back(delay);
         }
         usleep(50000);
-        for (int j = 0; j < 50; j++) {
-            capture(cap_handle, capture_buffer, cap_frames_per_period);
-        }
+        snd_pcm_drop(cap_handle);
+        snd_pcm_drop(play_handle);
+//        std::cout << "before extra cap" << std::endl;
+//        for (int j = 0; j < 50; j++) {
+//            capture(cap_handle, capture_buffer, cap_frames_per_period);
+//        }
     }
 
     noise_file.close();
@@ -98,8 +105,8 @@ int main(int argc, char *argv[]) {
                   << " std deviation: " << deviation << std::endl;
     }
 
-    snd_pcm_drain(play_handle);
     snd_pcm_close(play_handle);
+    snd_pcm_close(cap_handle);
 
     return 0;
 }
