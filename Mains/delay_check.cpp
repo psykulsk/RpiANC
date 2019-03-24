@@ -57,6 +57,7 @@ int main(int argc, char *argv[]) {
     fixed_sample_type capture_buffer[cap_frames_per_period];
     std::vector<long> delay_test_results;
     std::ifstream noise_file("tone_sine_5k.raw", std::ios::binary | std::ios::in);
+    std::ofstream output_file("delay_test_capture_samples.raw", std::ios::binary | std::ios::out);
     if (!noise_file.is_open()) {
         std::cout << "File not opened" << std::endl;
         return -1;
@@ -70,13 +71,14 @@ int main(int argc, char *argv[]) {
         snd_pcm_prepare(cap_handle);
         snd_pcm_prepare(play_handle);
         long delay = single_delay_check(play_frames_per_period, cap_frames_per_period, play_handle,
-                                        cap_handle, noise_file, GENERATE_AUDIO);
+                                        cap_handle, noise_file, output_file, GENERATE_AUDIO);
         if (delay != -1) {
             delay_test_results.push_back(delay);
         }
-        usleep(50000);
+        snd_pcm_drain(cap_handle);
         snd_pcm_drop(cap_handle);
         snd_pcm_drop(play_handle);
+        usleep(50000);
 //        std::cout << "before extra cap" << std::endl;
 //        for (int j = 0; j < 50; j++) {
 //            capture(cap_handle, capture_buffer, cap_frames_per_period);
@@ -84,6 +86,7 @@ int main(int argc, char *argv[]) {
     }
 
     noise_file.close();
+    output_file.close();
 
     if (delay_test_results.size() > 1) {
 //        Remove first, flawed element of results
