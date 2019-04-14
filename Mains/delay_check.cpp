@@ -77,11 +77,11 @@ int main(int argc, char *argv[]) {
         }
         snd_pcm_drain(cap_handle);
         snd_pcm_drop(cap_handle);
+        snd_pcm_drain(play_handle);
+        usleep(100000);
         snd_pcm_drop(play_handle);
-        usleep(50000);
 //        std::cout << "before extra cap" << std::endl;
 //        for (int j = 0; j < 50; j++) {
-//            capture(cap_handle, capture_buffer, cap_frames_per_period);
 //        }
     }
 

@@ -31,44 +31,63 @@ int main() {
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
-    unsigned int number_of_channels = 2;
-    snd_pcm_uframes_t cap_period_size = 64;
+    unsigned int number_of_channels = NR_OF_CHANNELS;
+    snd_pcm_uframes_t cap_frames_per_period = CAP_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t cap_frames_per_device_buffer = CAP_PERIODS_PER_BUFFER * CAP_FRAMES_PER_PERIOD;
 
-    init_capture(&cap_handle, &play_freq, &cap_period_size, number_of_channels,
+    init_capture(&cap_handle, &play_freq, &cap_frames_per_period, &cap_frames_per_device_buffer, NR_OF_CHANNELS,
                  capture_device_name);
-    snd_pcm_uframes_t buffer_length = cap_period_size * number_of_channels;
-    fixed_sample_type buffer[buffer_length];
-
 
     snd_pcm_t *play_handle;
-    snd_pcm_uframes_t play_buffer_size = 1024;
-    snd_pcm_uframes_t play_period_size = 256;
+    snd_pcm_uframes_t play_frames_per_period = PLAY_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t play_frames_per_device_buffer = PLAY_PERIODS_PER_BUFFER * PLAY_FRAMES_PER_PERIOD;
 
-    init_playback(&play_handle, &play_freq, &play_period_size,
-                  &play_buffer_size, number_of_channels, playback_device_name);
+    init_playback(&play_handle, &play_freq, &play_frames_per_period,
+                  &play_frames_per_device_buffer, number_of_channels, playback_device_name);
 
     int sample = 0;
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> capture_buffer = {0};
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> playback_buffer = {0};
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> processing_buffer = {0};
 
     while (sample < 12000) {
         ++sample;
-        capture(cap_handle, buffer, cap_period_size);
-        for (unsigned int i = 0; i < buffer_length; ++i)
-            if (i % 2)
-                err_vec.push_back(buffer[i]);
-            else
-                ref_vec.push_back(buffer[i]);
-
+#pragma omp parallel sections
+        {
+#pragma omp section
+            {
+                capture(cap_handle, capture_buffer.data(), CAP_FRAMES_PER_PERIOD);
+                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
+                    if (i % 2)
+                        err_vec.push_back(capture_buffer[i]);
+                    else
+                        ref_vec.push_back(capture_buffer[i]);
+            }
+#pragma omp section
+            {
+                if (sample > 2000) {
 #ifdef FEEDFORWARD
-        processing_feedforward_anc_sec_path_modelling(buffer, buffer_length);
+                    processing_feedforward_anc(processing_buffer.data(), BUFFER_SAMPLE_SIZE);
 #else
-        processing_feedback_anc_sec_path_modelling(buffer, buffer_length);
+                    processing_feedback_anc_sec_path_modelling(processing_buffer, BUFFER_SAMPLE_SIZE);
 #endif
-        for (unsigned int i = 0; i < buffer_length; ++i)
-            if (i % 2)
-                corr_vec_2.push_back(buffer[i]);
-            else
-                corr_vec.push_back(buffer[i]);
-        playback(play_handle, buffer, cap_period_size);
+                }
+                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i){
+                    if (i % 2)
+                        corr_vec_2.push_back(processing_buffer[i]);
+                    else
+                        corr_vec.push_back(processing_buffer[i]);
+                }
+
+            }
+#pragma omp section
+            {
+                playback(play_handle, playback_buffer.data(), PLAY_FRAMES_PER_PERIOD);
+            }
+        }
+// Exchange data between arrays
+        std::copy(processing_buffer.begin(), processing_buffer.end(), playback_buffer.begin());
+        std::copy(capture_buffer.begin(), capture_buffer.end(), processing_buffer.begin());
     }
 
 #ifdef FEEDFORWARD
