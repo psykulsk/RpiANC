@@ -125,9 +125,6 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
     val = snd_pcm_hw_params_get_sbits(params);
     printf("significant bits = %d\n", val);
 
-    snd_pcm_hw_params_get_tick_time(params, &val, &dir);
-    printf("tick time = %d us\n", val);
-
     val = snd_pcm_hw_params_is_batch(params);
     printf("is batch = %d\n", val);
 

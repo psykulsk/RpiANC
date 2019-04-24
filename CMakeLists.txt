@@ -24,11 +24,15 @@ find_package(PythonLibs 2.7)
 
 set(SOUND_INTERFACE_SOURCE_FILES Sources/capture.cpp Sources/playback.cpp)
 set(SOURCE_FILES Sources/common.cpp Sources/processing.cpp Sources/delay_tests.cpp)
-set(HEADER_FILES Headers/common.h Headers/constants.h Headers/FIRFilter.h Headers/LMSFilter.h Headers/BlockLMSFilter.h Headers/matplotlibcpp.h Headers/FxLMSFilter.h Headers/test_commons.h Headers/delay_tests.h)
+set(HEADER_FILES Headers/common.h Headers/constants.h Headers/FIRFilter.h Headers/LMSFilter.h Headers/BlockLMSFilter.h Headers/matplotlibcpp.h Headers/FxLMSFilter.h Headers/test_commons.h Headers/delay_tests.h Headers/subband_filtering_constants.h)
 
 add_executable(ffANC Mains/feedforward_anc.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(ffANC PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(ffANC asound ${PYTHON_LIBRARIES})
+
+add_executable(subFFANC Mains/feedforward_anc_subband.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
+target_include_directories(subFFANC PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(subFFANC asound ${PYTHON_LIBRARIES})
 
 add_executable(secPath Mains/offline_sec_path_modelling.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(secPath PRIVATE ${PYTHON_INCLUDE_DIRS})

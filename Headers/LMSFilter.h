@@ -7,6 +7,7 @@
 
 
 #include "common.h"
+#include "constants.h"
 #include "FIRFilter.h"
 
 
@@ -55,7 +56,7 @@ public:
 
 private:
     float _alpha;
-    float _lms_leak_factor = 0.99999f;
+    float _lms_leak_factor = LMS_LEAK_FACTOR;
     filter_coeffs_array _lms_coefficients;
     samples_array _samples_buffer;
 };
