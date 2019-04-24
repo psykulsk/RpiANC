@@ -12,14 +12,15 @@
 
 int main() {
 
+    const long RESERVED_SAMPLES = 2560000;
     std::vector<fixed_sample_type> err_vec;
-    err_vec.reserve(1280000);
+    err_vec.reserve(RESERVED_SAMPLES);
     std::vector<fixed_sample_type> ref_vec;
-    ref_vec.reserve(1280000);
+    ref_vec.reserve(RESERVED_SAMPLES);
     std::vector<fixed_sample_type> corr_vec;
-    corr_vec.reserve(1280000);
+    corr_vec.reserve(RESERVED_SAMPLES);
     std::vector<fixed_sample_type> corr_vec_2;
-    corr_vec_2.reserve(1280000);
+    corr_vec_2.reserve(RESERVED_SAMPLES);
 
 #ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
@@ -49,6 +50,7 @@ int main() {
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> capture_buffer = {0};
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> playback_buffer = {0};
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> processing_buffer = {0};
+    const int START_PROCESSING_AFTER_SAMPLE = 1000;
 
     while (sample < 12000) {
         ++sample;
@@ -57,6 +59,7 @@ int main() {
 #pragma omp section
             {
                 capture(cap_handle, capture_buffer.data(), CAP_FRAMES_PER_PERIOD);
+                dc_removal(capture_buffer.data(), BUFFER_SAMPLE_SIZE);
                 for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
                     if (i % 2)
                         err_vec.push_back(capture_buffer[i]);
@@ -65,7 +68,7 @@ int main() {
             }
 #pragma omp section
             {
-                if (sample > 2000) {
+                if (sample > START_PROCESSING_AFTER_SAMPLE) {
 #ifdef FEEDFORWARD
                     processing_feedforward_anc(processing_buffer.data(), BUFFER_SAMPLE_SIZE);
 #else

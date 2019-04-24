@@ -6,6 +6,26 @@
 #include "../Headers/FxLMSFilter.h"
 #include "../Headers/constants.h"
 
+void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_length){
+    static sample_type last_error_sample = 0.0f;
+    static sample_type last_ref_sample = 0.0f;
+
+    for (unsigned long i = 1; i < buffer_length; i += 2) {
+        sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]);
+        sample_type reference_sample =signed_fixed_to_floating(samples_buffer[i - 1]);
+        // error samples filtering
+        sample_type new_err = error_sample + DC_REMOVAL_ALPHA*last_error_sample;
+        sample_type out_err = new_err - last_error_sample;
+        last_error_sample = new_err;
+        samples_buffer[i] = floating_to_signed_fixed(out_err);
+        // reference samples filtering
+        sample_type new_ref = reference_sample + DC_REMOVAL_ALPHA*last_ref_sample;
+        sample_type out_ref = new_ref - last_ref_sample;
+        last_ref_sample = out_ref;
+        samples_buffer[i-1] = floating_to_signed_fixed(out_ref);
+    }
+}
+
 void processing_feedforward_anc(fixed_sample_type *samples_buffer,
                                 long unsigned int buffer_length) {
 
@@ -13,9 +33,10 @@ void processing_feedforward_anc(fixed_sample_type *samples_buffer,
                                                                      FX_FILTER_COEFFS);
     static std::vector<sample_type> previous_reference_samples(buffer_length/2, 0.0f);
 
+//    dc_removal(samples_buffer, buffer_length);
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         // DC_REDUCTION_VALUE added to correct the dc offset in error which causes instability
-        sample_type error_sample = INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i]) + DC_REDUCTION_VALUE;
+        sample_type error_sample = INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i]);
         sample_type reference_sample =INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i - 1]);
         sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i/2), error_sample);
         previous_reference_samples.at(i/2) = reference_sample;
