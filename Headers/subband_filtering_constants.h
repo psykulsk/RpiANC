@@ -6,10 +6,13 @@
 #define RPIANC_SUBBAND_FILTERING_CONSTANTS_H
 
 #include "common.h"
+#include "constants.h"
 
-const size_t ANALYSIS_FILTER_LENGTH = 14;
-const size_t SYNTHESIS_FILTER_LENGTH = 14;
-const std::array<sample_type, ANALYSIS_FILTER_LENGTH> ANALYSIS_COEFFS_1 = {
+const size_t NR_OF_SUBBANDS = 4;
+const size_t SUB_BUFFER_SIZE = BUFFER_SAMPLE_SIZE/NR_OF_SUBBANDS;
+
+const size_t SUBBAND_FILTER_LENGTH = 14;
+const std::array<sample_type, SUBBAND_FILTER_LENGTH> ANALYSIS_COEFFS_1 = {
         -0.003371,
         -0.082363,
         -0.039126,
@@ -25,7 +28,7 @@ const std::array<sample_type, ANALYSIS_FILTER_LENGTH> ANALYSIS_COEFFS_1 = {
         0.007366,
         -0.000042
 };
-const std::array<sample_type, ANALYSIS_FILTER_LENGTH> ANALYSIS_COEFFS_2 = {
+const std::array<sample_type, SUBBAND_FILTER_LENGTH> ANALYSIS_COEFFS_2 = {
         0.007720,
         0.188728,
         0.137579,
@@ -41,7 +44,7 @@ const std::array<sample_type, ANALYSIS_FILTER_LENGTH> ANALYSIS_COEFFS_2 = {
         -0.004558,
         0.000028
 };
-const std::array<sample_type, ANALYSIS_FILTER_LENGTH> ANALYSIS_COEFFS_3 = {
+const std::array<sample_type, SUBBAND_FILTER_LENGTH> ANALYSIS_COEFFS_3 = {
         -0.001272,
         -0.031101,
         -0.166393,
@@ -57,7 +60,7 @@ const std::array<sample_type, ANALYSIS_FILTER_LENGTH> ANALYSIS_COEFFS_3 = {
         0.001247,
         -0.000006
 };
-const std::array<sample_type, ANALYSIS_FILTER_LENGTH> ANALYSIS_COEFFS_4 = {
+const std::array<sample_type, SUBBAND_FILTER_LENGTH> ANALYSIS_COEFFS_4 = {
         0.001024,
         0.025045,
         0.020942,
@@ -74,7 +77,7 @@ const std::array<sample_type, ANALYSIS_FILTER_LENGTH> ANALYSIS_COEFFS_4 = {
         -0.000509
 };
 
-const std::array<sample_type, SYNTHESIS_FILTER_LENGTH> SYNTHESIS_COEFFS_1 = {
+const std::array<sample_type, SUBBAND_FILTER_LENGTH> SYNTHESIS_COEFFS_1 = {
         -0.001605,
         0.039253,
         -0.022094,
@@ -90,7 +93,7 @@ const std::array<sample_type, SYNTHESIS_FILTER_LENGTH> SYNTHESIS_COEFFS_1 = {
         -0.363643,
         -0.002117
 };
-const std::array<sample_type, SYNTHESIS_FILTER_LENGTH> SYNTHESIS_COEFFS_2 = {
+const std::array<sample_type, SUBBAND_FILTER_LENGTH> SYNTHESIS_COEFFS_2 = {
         0.001057,
         -0.025858,
         0.014379,
@@ -106,7 +109,7 @@ const std::array<sample_type, SYNTHESIS_FILTER_LENGTH> SYNTHESIS_COEFFS_2 = {
         0.744089,
         0.004347
 };
-const std::array<sample_type, SYNTHESIS_FILTER_LENGTH> SYNTHESIS_COEFFS_3 = {
+const std::array<sample_type, SUBBAND_FILTER_LENGTH> SYNTHESIS_COEFFS_3 = {
         -0.000494,
         0.012035,
         -0.006755,
@@ -122,7 +125,7 @@ const std::array<sample_type, SYNTHESIS_FILTER_LENGTH> SYNTHESIS_COEFFS_3 = {
         -0.156387,
         -0.000918
 };
-const std::array<sample_type, SYNTHESIS_FILTER_LENGTH> SYNTHESIS_COEFFS_4 = {
+const std::array<sample_type, SUBBAND_FILTER_LENGTH> SYNTHESIS_COEFFS_4 = {
         -0.013861,
         0.338855,
         -0.189422,
