@@ -35,9 +35,7 @@ struct GeneratedAudio {
 };
 
 long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes_t frames_in_cap_period,
-                        snd_pcm_t *play_handle, snd_pcm_t *cap_handle, std::ifstream &noise_file,
-                        std::ofstream &output_files,
-                        bool generate_audio = false);
+                        snd_pcm_t *play_handle, snd_pcm_t *cap_handle, bool generate_audio = false);
 
 
 double std_deviation(std::vector<long> delays, double mean);

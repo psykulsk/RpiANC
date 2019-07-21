@@ -56,22 +56,22 @@ int main(int argc, char *argv[]) {
 
     fixed_sample_type capture_buffer[cap_frames_per_period];
     std::vector<long> delay_test_results;
-    std::ifstream noise_file("tone_sine_5k.raw", std::ios::binary | std::ios::in);
-    std::ofstream output_file("delay_test_capture_samples.raw", std::ios::binary | std::ios::out);
-    if (!noise_file.is_open()) {
-        std::cout << "File not opened" << std::endl;
-        return -1;
-    }
-    if (!noise_file.good()) {
-        std::cout << "File not good" << std::endl;
-        return -1;
-    }
+//    std::ifstream noise_file("tone_sine_5k.raw", std::ios::binary | std::ios::in);
+//    std::ofstream output_file("delay_test_capture_samples.raw", std::ios::binary | std::ios::out);
+//    if (!noise_file.is_open()) {
+//        std::cout << "File not opened" << std::endl;
+//        return -1;
+//    }
+//    if (!noise_file.good()) {
+//        std::cout << "File not good" << std::endl;
+//        return -1;
+//    }
 
     for (unsigned long i = 0; i < number_of_tests; ++i) {
         snd_pcm_prepare(cap_handle);
         snd_pcm_prepare(play_handle);
         long delay = single_delay_check(play_frames_per_period, cap_frames_per_period, play_handle,
-                                        cap_handle, noise_file, output_file, GENERATE_AUDIO);
+                                        cap_handle, GENERATE_AUDIO);
         if (delay != -1) {
             delay_test_results.push_back(delay);
         }
@@ -85,8 +85,8 @@ int main(int argc, char *argv[]) {
 //        }
     }
 
-    noise_file.close();
-    output_file.close();
+//    noise_file.close();
+//    output_file.close();
 
     if (delay_test_results.size() > 1) {
 //        Remove first, flawed element of results
@@ -103,9 +103,12 @@ int main(int argc, char *argv[]) {
 
         double deviation = std_deviation(delay_test_results, average);
 
-        std::cout << "Min: " << min << " Max: " << max << " avg: " << average << " median: "
+//        std::cout << "Min: " << min << " Max: " << max << " avg: " << average << " median: "
+//                  << delay_test_results.at(delay_test_results.size() / 2)
+//                  << " std deviation: " << deviation << std::endl;
+        std::cout << CAP_FRAMES_PER_PERIOD <<" "<< min << " " << max << " " << average << " "
                   << delay_test_results.at(delay_test_results.size() / 2)
-                  << " std deviation: " << deviation << std::endl;
+                  << " " << deviation << std::endl;
     }
 
     snd_pcm_close(play_handle);

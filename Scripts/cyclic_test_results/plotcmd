@@ -1,0 +1,9 @@
+set title "Latency plot"
+set terminal png
+set xlabel "Latency (us), max 80 us"
+set logscale y
+set xrange [0:400]
+set yrange [0.8:*]
+set ylabel "Number of latency samples"
+set output "plot.png"
+plot "histogram1" using 1:2 title " CPU0" with histeps, "histogram2" using 1:2 title " CPU1" with histeps, "histogram3" using 1:2 title " CPU2" with histeps, "histogram4" using 1:2 title " CPU3" with histeps

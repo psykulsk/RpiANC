@@ -2,6 +2,7 @@
 #include <vector>
 #include <chrono>
 #include <iostream>
+#include <omp.h>
 #include "../Headers/capture.h"
 #include "../Headers/playback.h"
 #include "../Headers/processing.h"
@@ -14,7 +15,7 @@
 #define FEEDFORWARD
 
 typedef std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> fixed_samples_buffer;
-typedef std::array<sample_type , SUB_BUFFER_SIZE> samples_sub_buffer;
+typedef std::array<sample_type, SUB_BUFFER_SIZE> samples_sub_buffer;
 typedef std::array<samples_sub_buffer, NR_OF_SUBBANDS> subband_buffers;
 typedef FIRFilter<SUBBAND_FILTER_LENGTH> subband_filter;
 typedef std::array<subband_filter, NR_OF_SUBBANDS> subband_filters;
@@ -33,7 +34,7 @@ void subband_analysis(fixed_samples_buffer &main_buffer, subband_buffers &sub_bu
             subband_filter(ANALYSIS_COEFFS_4)
     };
 
-    for (unsigned long sample_i = 1; sample_i < BUFFER_SAMPLE_SIZE; sample_i += 2) {
+    for (unsigned long sample_i = 1; sample_i < BUFFER_SAMPLE_SIZE-NR_OF_SUBBANDS; sample_i += 2) {
         sample_type error_sample = signed_fixed_to_floating(main_buffer[sample_i]);
         sample_type reference_sample = signed_fixed_to_floating(main_buffer[sample_i - 1]);
         for (unsigned long subband_i = 0; subband_i < NR_OF_SUBBANDS; ++subband_i) {
@@ -41,8 +42,8 @@ void subband_analysis(fixed_samples_buffer &main_buffer, subband_buffers &sub_bu
             sample_type new_ref_sample = reference_filters.at(subband_i).fir_step(reference_sample);
             // Downsample
             if (sample_i % NR_OF_SUBBANDS == 1) {
-                sub_buffers.at(subband_i).at(sample_i / 4) = new_error_sample;
-                sub_buffers.at(subband_i).at(sample_i / 4 - 1) = new_ref_sample;
+                sub_buffers.at(subband_i).at(sample_i / 4 + 1) = new_error_sample;
+                sub_buffers.at(subband_i).at(sample_i / 4) = new_ref_sample;
             }
         }
     }
@@ -58,6 +59,7 @@ void subband_synthesis(fixed_samples_buffer &main_buffer, subband_buffers &buffe
     };
 
     for (unsigned long sample_i = 1; sample_i < BUFFER_SAMPLE_SIZE; sample_i += 2) {
+        float synthesized_sample = 0.0f;
         for (unsigned long subband_i = 0; subband_i < NR_OF_SUBBANDS; ++subband_i) {
             sample_type new_ref_sample;
             // Upsample with 0s
@@ -67,15 +69,18 @@ void subband_synthesis(fixed_samples_buffer &main_buffer, subband_buffers &buffe
             } else {
                 new_ref_sample = filters.at(subband_i).fir_step(0.0f);
             }
-            float
-
+            synthesized_sample += new_ref_sample;
         }
+//      Fill both output channels
+        main_buffer.at(sample_i) = floating_to_signed_fixed(synthesized_sample);
+        main_buffer.at(sample_i - 1) = floating_to_signed_fixed(synthesized_sample);
     }
 
 }
 
 int main() {
 
+    omp_set_num_threads(8);
     const long RESERVED_SAMPLES = 2560000;
     std::vector<fixed_sample_type> err_vec;
     err_vec.reserve(RESERVED_SAMPLES);
@@ -135,7 +140,12 @@ int main() {
             {
                 if (sample > START_PROCESSING_AFTER_SAMPLE) {
 #ifdef FEEDFORWARD
-                    processing_feedforward_anc_subband(processing_buffer.data(), BUFFER_SAMPLE_SIZE);
+                    subband_analysis(processing_buffer, sub_buffers);
+#pragma omp parallel for
+                    for (unsigned int subband_i = 0; subband_i < NR_OF_SUBBANDS; ++subband_i) {
+                        processing_feedforward_anc_subband(sub_buffers.at(subband_i).data(), BUFFER_SAMPLE_SIZE);
+                    }
+                    subband_synthesis(processing_buffer, sub_buffers);
 #else
                     processing_feedback_anc_sec_path_modelling(processing_buffer, BUFFER_SAMPLE_SIZE);
 #endif

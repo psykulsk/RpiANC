@@ -2,6 +2,7 @@
 #include <vector>
 #include <chrono>
 #include <iostream>
+#include <omp.h>
 #include "../Headers/capture.h"
 #include "../Headers/playback.h"
 #include "../Headers/processing.h"
@@ -11,6 +12,8 @@
 #define FEEDFORWARD
 
 int main() {
+
+    omp_set_num_threads(4);
 
     const long RESERVED_SAMPLES = 2560000;
     std::vector<fixed_sample_type> err_vec;

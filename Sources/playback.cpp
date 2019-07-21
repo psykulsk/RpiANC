@@ -49,7 +49,8 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
 
     snd_pcm_hw_params_set_rate_near(*handle, params,
                                     play_freq, &dir);
-
+    snd_pcm_uframes_t play_min_period_size_to_set = 1;
+    snd_pcm_hw_params_set_period_size_min(*handle, params, &play_min_period_size_to_set, &dir);
     snd_pcm_hw_params_set_buffer_size_near(*handle, params, play_buffer_size);
     snd_pcm_hw_params_set_period_size_near(*handle, params, play_period_size, &dir);
     /* Write the parameters to the driver */
@@ -61,12 +62,13 @@ void init_playback(snd_pcm_t **handle, unsigned int *play_freq, snd_pcm_uframes_
         exit(1);
     }
 
+
     snd_pcm_hw_params_get_rate(params, play_freq, &dir);
     snd_pcm_hw_params_get_period_size(params, play_period_size, &dir);
     snd_pcm_hw_params_get_buffer_size(params, play_buffer_size);
 
     std::cerr << "Playback params: " << "Playback rate: " << *play_freq << " Period size: "
-              << *play_period_size <<
+              << *play_period_size << " Play min period size: " << play_min_period_size_to_set <<
               " Buffer size: " << *play_buffer_size << std::endl;
 
 

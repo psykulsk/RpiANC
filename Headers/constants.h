@@ -12,7 +12,7 @@ const size_t NR_OF_CHANNELS = 2;
 const long unsigned int FILTER_LENGTH = 128;
 const long unsigned int FX_FILTER_LENGTH = 156;
 const float LMS_LEAK_FACTOR = 0.9999f;
-const sample_type LMS_STEP_SIZE = 0.05f;
+const sample_type LMS_STEP_SIZE = 0.02f;
 const sample_type SEC_PATH_LMS_STEP_SIZE = 0.000001f;
 const float DC_REDUCTION_VALUE = 0.0f;
 const float INPUT_SCALING = 2.0f;
@@ -177,10 +177,10 @@ const std::array<sample_type, FX_FILTER_LENGTH> FX_FILTER_COEFFS = {
         0.00184118747711182
 };
 
-const size_t PLAY_FRAMES_PER_PERIOD = 128;
-const size_t PLAY_PERIODS_PER_BUFFER = 8;
-const size_t CAP_FRAMES_PER_PERIOD = 128;
-const size_t CAP_PERIODS_PER_BUFFER = 8;
+const size_t PLAY_FRAMES_PER_PERIOD = 12;
+const size_t PLAY_PERIODS_PER_BUFFER = 128;
+const size_t CAP_FRAMES_PER_PERIOD = 12;
+const size_t CAP_PERIODS_PER_BUFFER = 128;
 const size_t BUFFER_SAMPLE_SIZE = CAP_FRAMES_PER_PERIOD*NR_OF_CHANNELS;
 
 #endif //RPIANC_CONSTANTS_H

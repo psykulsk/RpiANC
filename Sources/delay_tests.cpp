@@ -6,8 +6,7 @@
 #include "../Headers/delay_tests.h"
 
 long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes_t frames_in_cap_period,
-                        snd_pcm_t *play_handle, snd_pcm_t *cap_handle, std::ifstream &noise_file,
-                        std::ofstream &output_file, bool generate_audio) {
+                        snd_pcm_t *play_handle, snd_pcm_t *cap_handle, bool generate_audio) {
 
 
     std::chrono::high_resolution_clock::time_point start_time;
@@ -21,7 +20,7 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
     fixed_sample_type capture_buffer[frames_in_cap_period * NR_OF_CHANNELS];
     fixed_sample_type play_buffer[frames_in_play_period * NR_OF_CHANNELS];
     long delay_us;
-    long nr_of_samples = 100;
+    long nr_of_samples = 200;
 
 
     auto silence_samples = GeneratedAudio<PLAY_FRAMES_PER_PERIOD * NR_OF_CHANNELS>(true);
@@ -43,7 +42,7 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
             while (sample < nr_of_samples) {
                 ++sample;
                 if (!generate_audio) {
-                    noise_file.read((char *) play_buffer, bytes_in_play_period);
+//                    noise_file.read((char *) play_buffer, bytes_in_play_period);
                     if (start) {
                         start_time = std::chrono::high_resolution_clock::now();
                         start = false;
@@ -93,7 +92,7 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
 //                        sum += (double) (std::abs(capture_buffer[i]));
                     }
                 }
-                output_file.write((char *) capture_buffer, bytes_in_cap_period);
+//                output_file.write((char *) capture_buffer, bytes_in_cap_period);
 //                double avg = sum / ((double) std::numeric_limits<fixed_sample_type>::max() *
 //                                    (double) frames_in_cap_period);
 //                std::cout << "Avg: " << avg << std::endl;
@@ -106,6 +105,8 @@ long single_delay_check(snd_pcm_uframes_t frames_in_play_period, snd_pcm_uframes
             }
         }
     }
+    snd_pcm_drain(play_handle);
+    snd_pcm_drain(cap_handle);
     omp_destroy_lock(&capture_lock);
 
 

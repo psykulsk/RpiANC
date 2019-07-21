@@ -50,6 +50,9 @@ void init_capture(snd_pcm_t **cap_handle, unsigned int *cap_freq, snd_pcm_uframe
                                     cap_freq, &dir);
 
 //    snd_pcm_hw_params_set_buffer_size_near (cap_handle, params, &frames);
+    snd_pcm_uframes_t min_period_size_to_set = 2;
+
+    snd_pcm_hw_params_set_period_size_min(*cap_handle, params, &min_period_size_to_set, &dir);
     snd_pcm_hw_params_set_period_size_near(*cap_handle, params, cap_period_size, NULL);
     snd_pcm_hw_params_set_buffer_size_near(*cap_handle, params, cap_buffer_size);
     /* Write the parameters to the driver */
@@ -65,7 +68,7 @@ void init_capture(snd_pcm_t **cap_handle, unsigned int *cap_freq, snd_pcm_uframe
     snd_pcm_hw_params_get_period_size(params, cap_period_size, &dir);
 
     std::cerr << "Capture params: " << "Capture rate: " << *cap_freq << " Period size: " << *cap_period_size
-              << std::endl;
+              << " Min period size: " << min_period_size_to_set << std::endl;
 
     if (*cap_period_size != CAP_FRAMES_PER_PERIOD) {
         std::cout << "Number of cap frames per period ( " << *cap_period_size << " ) then configuration ( "
