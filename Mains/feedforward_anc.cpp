@@ -55,7 +55,7 @@ int main() {
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> processing_buffer = {0};
     const int START_PROCESSING_AFTER_SAMPLE = 1000;
 
-    while (sample < 12000) {
+    while (sample < 1200000) {
         ++sample;
 #pragma omp parallel sections
         {
