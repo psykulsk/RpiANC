@@ -6,23 +6,109 @@
 #include "../Headers/FxLMSFilter.h"
 #include "../Headers/constants.h"
 
-void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_length){
+void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_length) {
     static sample_type last_error_sample = 0.0f;
     static sample_type last_ref_sample = 0.0f;
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]);
-        sample_type reference_sample =signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type reference_sample = signed_fixed_to_floating(samples_buffer[i - 1]);
         // error samples filtering
-        sample_type new_err = error_sample + DC_REMOVAL_ALPHA*last_error_sample;
+        sample_type new_err = error_sample + DC_REMOVAL_ALPHA * last_error_sample;
         sample_type out_err = new_err - last_error_sample;
         last_error_sample = new_err;
         samples_buffer[i] = floating_to_signed_fixed(out_err);
         // reference samples filtering
-        sample_type new_ref = reference_sample + DC_REMOVAL_ALPHA*last_ref_sample;
+        sample_type new_ref = reference_sample + DC_REMOVAL_ALPHA * last_ref_sample;
         sample_type out_ref = new_ref - last_ref_sample;
         last_ref_sample = out_ref;
-        samples_buffer[i-1] = floating_to_signed_fixed(out_ref);
+        samples_buffer[i - 1] = floating_to_signed_fixed(out_ref);
+    }
+}
+
+void do_fx_filter(fixed_sample_type *samples_buffer, long unsigned int buffer_length) {
+    static FIRFilter<FX_FILTER_LENGTH> fx_filter = FIRFilter<FX_FILTER_LENGTH>(FX_FILTER_COEFFS);
+
+    for (unsigned long i = 1; i < buffer_length; i += 2) {
+        sample_type reference_sample = signed_fixed_to_floating(samples_buffer[i - 1]);
+        // reference samples filtering
+        samples_buffer[i - 1] = floating_to_signed_fixed(fx_filter.fir_step(reference_sample));
+    }
+}
+
+std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE / 8> downsample_by_8(fixed_sample_type *samples_buffer) {
+    static auto aa_filter_error = FIRFilter<RESAMPLE_FILTER_LENGTH>(RESAMPLE_FILTER_COEFFS);
+    static auto aa_filter_reference = FIRFilter<RESAMPLE_FILTER_LENGTH>(RESAMPLE_FILTER_COEFFS);
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE / 8> output_array = {0};
+    for (unsigned long i = 1; i < BUFFER_SAMPLE_SIZE; i += 2) {
+        sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]);
+        sample_type reference_sample = signed_fixed_to_floating(samples_buffer[i - 1]);
+        // error samples filtering
+        sample_type new_err = aa_filter_error.fir_step(error_sample);
+        // reference samples fitlering
+        sample_type new_ref = aa_filter_reference.fir_step(reference_sample);
+        if (i % 16 == 1) {
+            output_array.at(i / 8 + 1) = floating_to_signed_fixed(new_err);
+            output_array.at(i / 8) = floating_to_signed_fixed(new_ref);
+        }
+    }
+    return output_array;
+}
+
+std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE / 8> downsample_by_8_fx(fixed_sample_type *samples_buffer) {
+    static auto aa_filter_error = FIRFilter<RESAMPLE_FILTER_LENGTH>(RESAMPLE_FILTER_COEFFS);
+    static auto aa_filter_reference = FIRFilter<RESAMPLE_FILTER_LENGTH>(RESAMPLE_FILTER_COEFFS);
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE / 8> output_array = {0};
+    for (unsigned long i = 1; i < BUFFER_SAMPLE_SIZE; i += 2) {
+        sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]);
+        sample_type reference_sample = signed_fixed_to_floating(samples_buffer[i - 1]);
+        // error samples filtering
+        sample_type new_err = aa_filter_error.fir_step(error_sample);
+        // reference samples fitlering
+        sample_type new_ref = aa_filter_reference.fir_step(reference_sample);
+        if (i % 16 == 1) {
+            output_array.at(i / 8 + 1) = floating_to_signed_fixed(new_err);
+            output_array.at(i / 8) = floating_to_signed_fixed(new_ref);
+        }
+    }
+    return output_array;
+}
+
+std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> upsample_by_8(fixed_sample_type *samples_buffer) {
+    static auto reconstruction_filter_l = FIRFilter<RESAMPLE_FILTER_LENGTH>(RESAMPLE_FILTER_COEFFS);
+    static auto reconstruction_filter_p = FIRFilter<RESAMPLE_FILTER_LENGTH>(RESAMPLE_FILTER_COEFFS);
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> output_array = {0};
+    for (unsigned long i = 1; i < BUFFER_SAMPLE_SIZE; i += 2) {
+        sample_type out_l_channel = 0.0f;
+        sample_type out_p_channel = 0.0f;
+        if (i % 16 == 1) {
+            out_l_channel = signed_fixed_to_floating(samples_buffer[i / 8 + 1]);
+            out_p_channel = signed_fixed_to_floating(samples_buffer[i / 8]);
+        }
+        sample_type new_l_channel = reconstruction_filter_l.fir_step(out_l_channel);
+        sample_type new_p_channel = reconstruction_filter_p.fir_step(out_p_channel);
+        output_array.at(i - 1) = floating_to_signed_fixed(new_l_channel);
+        output_array.at(i) = floating_to_signed_fixed(new_p_channel);
+    }
+    return output_array;
+}
+
+void processing_feedforward_anc_downsampled(fixed_sample_type *samples_buffer, fixed_sample_type *filtered_x_samples,
+                                            long unsigned int buffer_length) {
+
+    static LMSFilter<FILTER_LENGTH> lms_filter(LMS_STEP_SIZE);
+
+    for (unsigned long i = 1; i < buffer_length; i += 2) {
+        sample_type error_sample = INPUT_SCALING * signed_fixed_to_floating(samples_buffer[i]);
+        sample_type reference_sample = INPUT_SCALING * signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type fx_sample = INPUT_SCALING * signed_fixed_to_floating(filtered_x_samples[(i - 1) / 2 + (i - 1) % 2]);
+        sample_type correction_sample = lms_filter.lms_step(fx_sample, error_sample,
+                                                            reference_sample);
+        fixed_sample_type fixed_correction_sample = floating_to_signed_fixed(
+                correction_sample * OUTPUT_GAIN);
+        samples_buffer[i] = fixed_correction_sample;
+        samples_buffer[i - 1] = fixed_correction_sample;
+
     }
 }
 
@@ -31,13 +117,13 @@ void processing_feedforward_anc(fixed_sample_type *samples_buffer,
 
     static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
                                                                      FX_FILTER_COEFFS);
-    static std::vector<sample_type> previous_reference_samples(buffer_length/2, 0.0f);
+    static std::vector<sample_type> previous_reference_samples(buffer_length / 2, 0.0f);
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
-        sample_type error_sample = INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i]);
-        sample_type reference_sample =INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i - 1]);
-        sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i/2), error_sample);
-        previous_reference_samples.at(i/2) = reference_sample;
+        sample_type error_sample = INPUT_SCALING * signed_fixed_to_floating(samples_buffer[i]);
+        sample_type reference_sample = INPUT_SCALING * signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i / 2), error_sample);
+        previous_reference_samples.at(i / 2) = reference_sample;
         fixed_sample_type fixed_correction_sample = floating_to_signed_fixed(
                 correction_sample * OUTPUT_GAIN);
         samples_buffer[i] = fixed_correction_sample;
@@ -50,13 +136,13 @@ void processing_feedforward_anc_subband(sample_type *samples_buffer, long unsign
 
     static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
                                                                      FX_FILTER_COEFFS);
-    static std::vector<sample_type> previous_reference_samples(buffer_length/2, 0.0f);
+    static std::vector<sample_type> previous_reference_samples(buffer_length / 2, 0.0f);
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
-        sample_type error_sample = INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i]);
-        sample_type reference_sample =INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i - 1]);
-        sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i/2), error_sample);
-        previous_reference_samples.at(i/2) = reference_sample;
+        sample_type error_sample = INPUT_SCALING * signed_fixed_to_floating(samples_buffer[i]);
+        sample_type reference_sample = INPUT_SCALING * signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i / 2), error_sample);
+        previous_reference_samples.at(i / 2) = reference_sample;
         fixed_sample_type fixed_correction_sample = floating_to_signed_fixed(
                 correction_sample * OUTPUT_GAIN);
         samples_buffer[i] = fixed_correction_sample;
@@ -173,7 +259,7 @@ void processing_feedback_anc_sec_path_modelling(fixed_sample_type *samples_buffe
         fixed_sample_type fixed_correction_sample_right_channel = floating_to_signed_fixed(
                 correction_sample_right_channel * OUTPUT_GAIN);
         samples_buffer[i] = fixed_correction_sample_right_channel;
-       // Feedback fxlms step left channel
+        // Feedback fxlms step left channel
         sample_type error_sample_left_channel =
                 signed_fixed_to_floating(samples_buffer[i - 1]) + DC_REDUCTION_VALUE;
         sample_type reference_sample_left_channel = error_sample_left_channel +
