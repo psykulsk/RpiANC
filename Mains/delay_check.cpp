@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <omp.h>
 #include "../Headers/delay_tests.h"
 #include "../Headers/constants.h"
 
@@ -11,6 +12,8 @@
 const bool GENERATE_AUDIO = true;
 
 int main(int argc, char *argv[]) {
+
+    omp_set_num_threads(2);
 
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <NUMBER_OF_TEST_REPETITIONS>" << std::endl;

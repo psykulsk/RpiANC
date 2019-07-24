@@ -1,22 +1,31 @@
 
-#include <iostream>
-#include <fstream>
 #include <vector>
-#include <numeric>
+#include <chrono>
+#include <iostream>
+#include <omp.h>
+#include <random>
 #include "../Headers/capture.h"
 #include "../Headers/playback.h"
-#include "Fir1fixed.h"
 #include "../Headers/processing.h"
+#include "../Headers/common.h"
 #include "../Headers/LMSFilter.h"
 
-
 #define DEPLOYED_ON_RPI
-
+#define FEEDFORWARD
 
 int main() {
 
-    std::ifstream noise_file("whitenoise.raw", std::ios::binary);
-    assert(noise_file.is_open());
+    omp_set_num_threads(4);
+
+    const long RESERVED_SAMPLES = 2560000;
+    std::vector<fixed_sample_type> err_vec;
+    err_vec.reserve(RESERVED_SAMPLES);
+    std::vector<fixed_sample_type> ref_vec;
+    ref_vec.reserve(RESERVED_SAMPLES);
+    std::vector<fixed_sample_type> corr_vec;
+    corr_vec.reserve(RESERVED_SAMPLES);
+    std::vector<fixed_sample_type> corr_vec_2;
+    corr_vec_2.reserve(RESERVED_SAMPLES);
 
 #ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
@@ -28,65 +37,82 @@ int main() {
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
-    unsigned int number_of_channels = 2;
-    snd_pcm_uframes_t cap_period_size = 64;
+    unsigned int number_of_channels = NR_OF_CHANNELS;
+    snd_pcm_uframes_t cap_frames_per_period = CAP_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t cap_frames_per_device_buffer = CAP_PERIODS_PER_BUFFER * CAP_FRAMES_PER_PERIOD;
 
-    init_capture(&cap_handle, &play_freq, &cap_period_size, number_of_channels,
+    init_capture(&cap_handle, &play_freq, &cap_frames_per_period, &cap_frames_per_device_buffer, NR_OF_CHANNELS,
                  capture_device_name);
-    snd_pcm_uframes_t buffer_length = cap_period_size * number_of_channels;
-    fixed_sample_type play_buffer[buffer_length];
-    fixed_sample_type capture_buffer[buffer_length];
-
 
     snd_pcm_t *play_handle;
-    snd_pcm_uframes_t play_device_buffer = 2048;
-    snd_pcm_uframes_t play_period_size = 32;
+    snd_pcm_uframes_t play_frames_per_period = PLAY_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t play_frames_per_device_buffer = PLAY_PERIODS_PER_BUFFER * PLAY_FRAMES_PER_PERIOD;
 
-    init_playback(&play_handle, &play_freq, &play_period_size,
-                  &play_device_buffer, number_of_channels, playback_device_name);
-
-    LMSFilter<FX_FILTER_LENGTH> lms_filter(0.0001);
-
-    std::vector<sample_type> error_vec;
-    std::vector<FIRFilter<FX_FILTER_LENGTH>::filter_coeffs_array> filter_coeffs_vec;
+    init_playback(&play_handle, &play_freq, &play_frames_per_period,
+                  &play_frames_per_device_buffer, number_of_channels, playback_device_name);
 
     int sample = 0;
-    while (sample < 10000) {
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> capture_buffer = {0};
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> playback_buffer = {0};
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> processing_buffer = {0};
+    std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> reference_generated_for_processing = {0};
+    const int START_PROCESSING_AFTER_SAMPLE = 1000;
+
+    auto secondary_path_estimation_filter = LMSFilter<FX_FILTER_LENGTH>(SEC_PATH_LMS_STEP_SIZE);
+
+
+    while (sample < 300000) {
         ++sample;
-        size_t size = buffer_length * sizeof(fixed_sample_type);
-        noise_file.read((char *) play_buffer, size);
-//        rc = read(0, play_buffer, size);
+#pragma omp parallel sections
+        {
+#pragma omp section
+            {
+                capture(cap_handle, capture_buffer.data(), CAP_FRAMES_PER_PERIOD);
+                dc_removal(capture_buffer.data(), BUFFER_SAMPLE_SIZE);
+//                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
+//                    if (i % 2)
+//                        err_vec.push_back(capture_buffer[i]);
+//                    else
+//                        ref_vec.push_back(capture_buffer[i]);
+            }
+#pragma omp section
+            {
+                if (sample > START_PROCESSING_AFTER_SAMPLE) {
+                    secondary_path_identification(processing_buffer.data(), reference_generated_for_processing.data(),
+                                                  BUFFER_SAMPLE_SIZE,
+                                                  secondary_path_estimation_filter);
+                }
+//                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
+//                    if (i % 2)
+//                        corr_vec_2.push_back(processing_buffer[i]);
+//                    else
+//                        corr_vec.push_back(floating_to_signed_fixed(secondary_path_estimation_filter.fir_filter.get_coefficients().at(0)));
+//                }
 
-//        if (rc == 0) {
-//            fprintf(stderr, "end of file on input\n");
-//            break;
-//        } else if (rc != size) {
-//            fprintf(stderr,
-//                    "short read: read %d bytes\n", rc);
-//        }
-        playback(play_handle, play_buffer, cap_period_size);
-        capture(cap_handle, capture_buffer, cap_period_size);
+            }
+#pragma omp section
+            {
 
-        std::vector<sample_type> lms_output(cap_period_size / 2, 0);
-        for (unsigned int i = 0; i < cap_period_size; i += 2) {
-            sample_type second_path_sample = signed_fixed_to_floating(capture_buffer[i]);
-            sample_type error_sample = second_path_sample - lms_output.at(i / 2);
-            lms_output.at(i / 2) = lms_filter.lms_step(second_path_sample, error_sample);
-            error_vec.push_back(error_sample);
-            filter_coeffs_vec.push_back(lms_filter.fir_filter.get_coefficients());
+                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
+                    float r = -1.0f + static_cast <float> (rand()) / (RAND_MAX / 2.0f);
+                    playback_buffer.at(i) = floating_to_signed_fixed(r);
+                }
+                playback(play_handle, playback_buffer.data(), PLAY_FRAMES_PER_PERIOD);
+            }
         }
+// Exchange data between arrays
+        std::copy(playback_buffer.begin(), playback_buffer.end(), reference_generated_for_processing.begin());
+        std::copy(capture_buffer.begin(), capture_buffer.end(), processing_buffer.begin());
     }
 
+    std::cout << "Final coefficients:" << "\n";
+    for (float coeff : secondary_path_estimation_filter.fir_filter.get_coefficients()) {
+        std::cout << coeff << ",\n";
+    }
 
-//    std::vector<sample_type> x(error_vec.size());
-//    std::iota(x.begin(), x.end(), 0);
-//    plt::subplot(3, 1, 1);
-//    plt::plot(reference_signal);
-//    plt::subplot(3, 1, 2);
-//    plt::plot(output);
-//    plt::subplot(3, 1, 3);
-//    plt::semilogy(x, error_vec);
-//    plt::show();
+//    save_vector_to_file("rec/err_mic.dat", err_vec);
+//    save_vector_to_file("rec/ref_mic.dat", ref_vec);
+//    save_vector_to_file("rec/corr_sig.dat", corr_vec);
 
     snd_pcm_drain(play_handle);
     snd_pcm_close(play_handle);

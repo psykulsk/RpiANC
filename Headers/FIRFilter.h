@@ -22,7 +22,6 @@ public:
 
     sample_type fir_step(sample_type new_sample) {
         sample_type new_val = 0;
-
         // Shift sample_buffer (FIFO style)
         for (long unsigned int i = filter_length - 1; i >= 1; --i) {
             _samples_buffer[i] = _samples_buffer[i - 1];

@@ -5,6 +5,7 @@
 #ifndef RPIANC_LMSFILTER_H
 #define RPIANC_LMSFILTER_H
 
+#include <iostream>
 
 #include "common.h"
 #include "constants.h"

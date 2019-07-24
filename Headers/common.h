@@ -29,4 +29,20 @@ fixed_sample_type inline floating_to_signed_fixed(sample_type sample) {
 
 void save_vector_to_file(const std::string &filename, const std::vector<fixed_sample_type> &signal);
 
+void save_vector_to_file(const std::string &filename, const std::vector<long> &signal);
+
+//template<class InputIterator>
+//void save_container_to_file(const std::string &filename, InputIterator first, InputIterator last){
+//    std::ofstream file;
+//    file.open(filename, std::ios::binary);
+//
+//    assert(file.is_open());
+//    while(first != last){
+//        file.write((char *) first, sizeof(fixed_sample_type));
+//        ++first;
+//    }
+//    for (fixed_sample_type s : signal)
+//        file.write((char *) &s, sizeof(fixed_sample_type));
+//    file.close();
+//}
 #endif //RPIANC_COMMON_H

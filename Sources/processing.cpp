@@ -5,6 +5,16 @@
 #include "../Headers/processing.h"
 #include "../Headers/FxLMSFilter.h"
 #include "../Headers/constants.h"
+#include <iostream>
+
+void secondary_path_identification(fixed_sample_type *samples_buffer, fixed_sample_type *ref_for_processing, long unsigned int buffer_length,
+        LMSFilter<FX_FILTER_LENGTH> &sec_path_estimation_filter){
+    for (unsigned long i = 1; i < buffer_length; i += 2) {
+        sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]);
+        sample_type reference_sample =signed_fixed_to_floating(ref_for_processing[i - 1]);
+        sec_path_estimation_filter.lms_step(reference_sample, error_sample, reference_sample);
+    }
+}
 
 void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_length){
     static sample_type last_error_sample = 0.0f;

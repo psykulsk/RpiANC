@@ -8,6 +8,11 @@
 
 #include "common.h"
 #include "../Headers/constants.h"
+#include "../Headers/LMSFilter.h"
+
+void secondary_path_identification(fixed_sample_type *samples_buffer,fixed_sample_type *ref_for_processing,
+                                   long unsigned int buffer_length,
+                                   LMSFilter<FX_FILTER_LENGTH> &sec_path_estimation_filter);
 
 void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_length);
 

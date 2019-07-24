@@ -3,9 +3,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-error_file = "audio_files/err_mic.dat"
-reference_file = "audio_files/ref_mic.dat"
-correction_file = "audio_files/corr_sig.dat"
+error_file = "audio_files/rec/err_mic.dat"
+reference_file = "audio_files/rec/ref_mic.dat"
+correction_file = "audio_files/rec/corr_sig.dat"
 
 # Load all test results files
 error_signal = np.fromfile(error_file, dtype=np.int32)

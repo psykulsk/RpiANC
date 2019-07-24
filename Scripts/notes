@@ -1,0 +1,2 @@
+sudo chrt -f 1 nice -n -20 ionice -c 1 -n 0 ./ffANC 
+sudo chrt -f 1 nice -n -20 ionice -c 1 -n 0 taskset -c 1,2,3 ./ffANC 

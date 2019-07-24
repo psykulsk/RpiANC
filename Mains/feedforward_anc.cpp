@@ -11,19 +11,27 @@
 #define DEPLOYED_ON_RPI
 #define FEEDFORWARD
 
+typedef std::chrono::high_resolution_clock::time_point time_point;
+
 int main() {
 
-    omp_set_num_threads(4);
+    omp_set_num_threads(3);
 
     const long RESERVED_SAMPLES = 2560000;
-    std::vector<fixed_sample_type> err_vec;
-    err_vec.reserve(RESERVED_SAMPLES);
-    std::vector<fixed_sample_type> ref_vec;
-    ref_vec.reserve(RESERVED_SAMPLES);
-    std::vector<fixed_sample_type> corr_vec;
-    corr_vec.reserve(RESERVED_SAMPLES);
-    std::vector<fixed_sample_type> corr_vec_2;
-    corr_vec_2.reserve(RESERVED_SAMPLES);
+//    std::vector<fixed_sample_type> err_vec;
+//    err_vec.reserve(RESERVED_SAMPLES);
+//    std::vector<fixed_sample_type> ref_vec;
+//    ref_vec.reserve(RESERVED_SAMPLES);
+//    std::vector<fixed_sample_type> corr_vec;
+//    corr_vec.reserve(RESERVED_SAMPLES);
+//    std::vector<fixed_sample_type> corr_vec_2;
+//    corr_vec_2.reserve(RESERVED_SAMPLES);
+    std::vector<long> cap_time;
+    cap_time.reserve(RESERVED_SAMPLES);
+    std::vector<long> proc_time;
+    proc_time.reserve(RESERVED_SAMPLES);
+    std::vector<long> play_time;
+    play_time.reserve(RESERVED_SAMPLES);
 
 #ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
@@ -55,22 +63,26 @@ int main() {
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> processing_buffer = {0};
     const int START_PROCESSING_AFTER_SAMPLE = 1000;
 
-    while (sample < 1200000) {
+    while (sample < 25000) {
         ++sample;
 #pragma omp parallel sections
         {
 #pragma omp section
             {
+                time_point start = std::chrono::high_resolution_clock::now();
                 capture(cap_handle, capture_buffer.data(), CAP_FRAMES_PER_PERIOD);
                 dc_removal(capture_buffer.data(), BUFFER_SAMPLE_SIZE);
-                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
-                    if (i % 2)
-                        err_vec.push_back(capture_buffer[i]);
-                    else
-                        ref_vec.push_back(capture_buffer[i]);
+                time_point end = std::chrono::high_resolution_clock::now();
+                cap_time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
+//                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
+//                    if (i % 2)
+//                        err_vec.push_back(capture_buffer[i]);
+//                    else
+//                        ref_vec.push_back(capture_buffer[i]);
             }
 #pragma omp section
             {
+                time_point start = std::chrono::high_resolution_clock::now();
                 if (sample > START_PROCESSING_AFTER_SAMPLE) {
 #ifdef FEEDFORWARD
                     processing_feedforward_anc(processing_buffer.data(), BUFFER_SAMPLE_SIZE);
@@ -78,17 +90,22 @@ int main() {
                     processing_feedback_anc_sec_path_modelling(processing_buffer, BUFFER_SAMPLE_SIZE);
 #endif
                 }
-                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i){
-                    if (i % 2)
-                        corr_vec_2.push_back(processing_buffer[i]);
-                    else
-                        corr_vec.push_back(processing_buffer[i]);
-                }
+                time_point end = std::chrono::high_resolution_clock::now();
+                proc_time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
+//                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
+//                    if (i % 2)
+//                        corr_vec_2.push_back(processing_buffer[i]);
+//                    else
+//                        corr_vec.push_back(processing_buffer[i]);
+//                }
 
             }
 #pragma omp section
             {
+                time_point start = std::chrono::high_resolution_clock::now();
                 playback(play_handle, playback_buffer.data(), PLAY_FRAMES_PER_PERIOD);
+                time_point end = std::chrono::high_resolution_clock::now();
+                play_time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
             }
         }
 // Exchange data between arrays
@@ -96,10 +113,13 @@ int main() {
         std::copy(capture_buffer.begin(), capture_buffer.end(), processing_buffer.begin());
     }
 
+    save_vector_to_file("rec/cap_time.dat", cap_time);
+    save_vector_to_file("rec/proc_time.dat", proc_time);
+    save_vector_to_file("rec/play_time.dat", play_time);
 #ifdef FEEDFORWARD
-    save_vector_to_file("rec/err_mic.dat", err_vec);
-    save_vector_to_file("rec/ref_mic.dat", ref_vec);
-    save_vector_to_file("rec/corr_sig.dat", corr_vec);
+//    save_vector_to_file("rec/err_mic.dat", err_vec);
+//    save_vector_to_file("rec/ref_mic.dat", ref_vec);
+//    save_vector_to_file("rec/corr_sig.dat", corr_vec);
 #else
     save_vector_to_file("rec/err_mic_left_channel.dat", err_vec);
     save_vector_to_file("rec/err_mic_right_channel.dat", ref_vec);
