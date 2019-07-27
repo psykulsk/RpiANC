@@ -2,6 +2,7 @@
 #include <vector>
 #include <chrono>
 #include <iostream>
+#include <numeric>
 #include <omp.h>
 #include "../Headers/capture.h"
 #include "../Headers/playback.h"
@@ -12,6 +13,12 @@
 #define FEEDFORWARD
 
 typedef std::chrono::high_resolution_clock::time_point time_point;
+
+void avg_from_vector(const std::vector<long> &vec) {
+    long sum = std::accumulate(vec.begin(), vec.end(), 0);
+    double avg = (double) sum / vec.size();
+    std::cout << "Average: " << avg << "\n";
+}
 
 int main() {
 
@@ -32,6 +39,8 @@ int main() {
     proc_time.reserve(RESERVED_SAMPLES);
     std::vector<long> play_time;
     play_time.reserve(RESERVED_SAMPLES);
+    std::vector<long> total_time;
+    total_time.reserve(RESERVED_SAMPLES);
 
 #ifdef DEPLOYED_ON_RPI
     const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
@@ -65,6 +74,7 @@ int main() {
 
     while (sample < 25000) {
         ++sample;
+        time_point total_start = std::chrono::high_resolution_clock::now();
 #pragma omp parallel sections
         {
 #pragma omp section
@@ -111,11 +121,24 @@ int main() {
 // Exchange data between arrays
         std::copy(processing_buffer.begin(), processing_buffer.end(), playback_buffer.begin());
         std::copy(capture_buffer.begin(), capture_buffer.end(), processing_buffer.begin());
+        time_point total_end = std::chrono::high_resolution_clock::now();
+        total_time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(total_end - total_start).count());
     }
+
+
+    std::cout << "Cap time" << "\n";
+    avg_from_vector(cap_time);
+    std::cout << "proc time" << "\n";
+    avg_from_vector(proc_time);
+    std::cout << "play time" << "\n";
+    avg_from_vector(play_time);
+    std::cout << "total time" << "\n";
+    avg_from_vector(total_time);
 
     save_vector_to_file("rec/cap_time.dat", cap_time);
     save_vector_to_file("rec/proc_time.dat", proc_time);
     save_vector_to_file("rec/play_time.dat", play_time);
+    save_vector_to_file("rec/total_time.dat", total_time);
 #ifdef FEEDFORWARD
 //    save_vector_to_file("rec/err_mic.dat", err_vec);
 //    save_vector_to_file("rec/ref_mic.dat", ref_vec);
