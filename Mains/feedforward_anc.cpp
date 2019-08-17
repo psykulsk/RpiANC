@@ -24,15 +24,15 @@ int main() {
 
     omp_set_num_threads(3);
 
-    const long RESERVED_SAMPLES = 2560000;
-//    std::vector<fixed_sample_type> err_vec;
-//    err_vec.reserve(RESERVED_SAMPLES);
-//    std::vector<fixed_sample_type> ref_vec;
-//    ref_vec.reserve(RESERVED_SAMPLES);
-//    std::vector<fixed_sample_type> corr_vec;
-//    corr_vec.reserve(RESERVED_SAMPLES);
-//    std::vector<fixed_sample_type> corr_vec_2;
-//    corr_vec_2.reserve(RESERVED_SAMPLES);
+    const long RESERVED_SAMPLES = 25600000;
+    std::vector<fixed_sample_type> err_vec;
+    err_vec.reserve(RESERVED_SAMPLES);
+    std::vector<fixed_sample_type> ref_vec;
+    ref_vec.reserve(RESERVED_SAMPLES);
+    std::vector<fixed_sample_type> corr_vec;
+    corr_vec.reserve(RESERVED_SAMPLES);
+    std::vector<fixed_sample_type> corr_vec_2;
+    corr_vec_2.reserve(RESERVED_SAMPLES);
     std::vector<long> cap_time;
     cap_time.reserve(RESERVED_SAMPLES);
     std::vector<long> proc_time;
@@ -70,9 +70,9 @@ int main() {
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> capture_buffer = {0};
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> playback_buffer = {0};
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> processing_buffer = {0};
-    const int START_PROCESSING_AFTER_SAMPLE = 1000;
+    const int START_PROCESSING_AFTER_SAMPLE = 10;
 
-    while (sample < 25000) {
+    while (sample < 50000) {
         ++sample;
         time_point total_start = std::chrono::high_resolution_clock::now();
 #pragma omp parallel sections
@@ -84,11 +84,11 @@ int main() {
                 dc_removal(capture_buffer.data(), BUFFER_SAMPLE_SIZE);
                 time_point end = std::chrono::high_resolution_clock::now();
                 cap_time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
-//                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
-//                    if (i % 2)
-//                        err_vec.push_back(capture_buffer[i]);
-//                    else
-//                        ref_vec.push_back(capture_buffer[i]);
+                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
+                    if (i % 2)
+                        err_vec.push_back(capture_buffer[i]);
+                    else
+                        ref_vec.push_back(capture_buffer[i]);
             }
 #pragma omp section
             {
@@ -102,12 +102,12 @@ int main() {
                 }
                 time_point end = std::chrono::high_resolution_clock::now();
                 proc_time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
-//                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
-//                    if (i % 2)
-//                        corr_vec_2.push_back(processing_buffer[i]);
-//                    else
-//                        corr_vec.push_back(processing_buffer[i]);
-//                }
+                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
+                    if (i % 2)
+                        corr_vec_2.push_back(processing_buffer[i]);
+                    else
+                        corr_vec.push_back(processing_buffer[i]);
+                }
 
             }
 #pragma omp section
@@ -140,9 +140,9 @@ int main() {
     save_vector_to_file("rec/play_time.dat", play_time);
     save_vector_to_file("rec/total_time.dat", total_time);
 #ifdef FEEDFORWARD
-//    save_vector_to_file("rec/err_mic.dat", err_vec);
-//    save_vector_to_file("rec/ref_mic.dat", ref_vec);
-//    save_vector_to_file("rec/corr_sig.dat", corr_vec);
+    save_vector_to_file("rec/err_mic.dat", err_vec);
+    save_vector_to_file("rec/ref_mic.dat", ref_vec);
+    save_vector_to_file("rec/corr_sig.dat", corr_vec);
 #else
     save_vector_to_file("rec/err_mic_left_channel.dat", err_vec);
     save_vector_to_file("rec/err_mic_right_channel.dat", ref_vec);
