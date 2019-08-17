@@ -72,7 +72,7 @@ int main() {
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> processing_buffer = {0};
     const int START_PROCESSING_AFTER_SAMPLE = 10;
 
-    while (sample < 50000) {
+    while (sample < 100000) {
         ++sample;
         time_point total_start = std::chrono::high_resolution_clock::now();
 #pragma omp parallel sections

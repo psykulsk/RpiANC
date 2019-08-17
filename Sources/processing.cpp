@@ -20,6 +20,9 @@ void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_leng
     static sample_type last_error_sample = 0.0f;
     static sample_type last_ref_sample = 0.0f;
 
+    static FIRFilter<ANTYALIAS_FILTER_LENGTH> aa_filter_error(ANTYALIAS_FILTER_COEFFS);
+    static FIRFilter<ANTYALIAS_FILTER_LENGTH> aa_filter_ref(ANTYALIAS_FILTER_COEFFS);
+
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]);
         sample_type reference_sample =signed_fixed_to_floating(samples_buffer[i - 1]);
@@ -27,11 +30,13 @@ void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_leng
         sample_type new_err = error_sample + DC_REMOVAL_ALPHA*last_error_sample;
         sample_type out_err = new_err - last_error_sample;
         last_error_sample = new_err;
+        out_err = aa_filter_error.fir_step(out_err);
         samples_buffer[i] = floating_to_signed_fixed(out_err);
         // reference samples filtering
         sample_type new_ref = reference_sample + DC_REMOVAL_ALPHA*last_ref_sample;
         sample_type out_ref = new_ref - last_ref_sample;
         last_ref_sample = out_ref;
+        out_ref = aa_filter_ref.fir_step(out_ref);
         samples_buffer[i-1] = floating_to_signed_fixed(out_ref);
     }
 }
