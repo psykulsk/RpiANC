@@ -7,32 +7,33 @@
 #include "../Headers/constants.h"
 #include <iostream>
 
-void secondary_path_identification(fixed_sample_type *samples_buffer, fixed_sample_type *ref_for_processing, long unsigned int buffer_length,
-        LMSFilter<FX_FILTER_LENGTH> &sec_path_estimation_filter){
+void secondary_path_identification(fixed_sample_type *samples_buffer, fixed_sample_type *ref_for_processing,
+                                   long unsigned int buffer_length,
+                                   LMSFilter<FX_FILTER_LENGTH> &sec_path_estimation_filter) {
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]);
-        sample_type reference_sample =signed_fixed_to_floating(ref_for_processing[i - 1]);
+        sample_type reference_sample = signed_fixed_to_floating(ref_for_processing[i - 1]);
         sec_path_estimation_filter.lms_step(reference_sample, error_sample, reference_sample);
     }
 }
 
-void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_length){
+void dc_removal(fixed_sample_type *samples_buffer, long unsigned int buffer_length) {
     static sample_type last_error_sample = 0.0f;
     static sample_type last_ref_sample = 0.0f;
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
         sample_type error_sample = signed_fixed_to_floating(samples_buffer[i]);
-        sample_type reference_sample =signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type reference_sample = signed_fixed_to_floating(samples_buffer[i - 1]);
         // error samples filtering
-        sample_type new_err = error_sample + DC_REMOVAL_ALPHA*last_error_sample;
+        sample_type new_err = error_sample + DC_REMOVAL_ALPHA * last_error_sample;
         sample_type out_err = new_err - last_error_sample;
         last_error_sample = new_err;
         samples_buffer[i] = floating_to_signed_fixed(out_err);
         // reference samples filtering
-        sample_type new_ref = reference_sample + DC_REMOVAL_ALPHA*last_ref_sample;
+        sample_type new_ref = reference_sample + DC_REMOVAL_ALPHA * last_ref_sample;
         sample_type out_ref = new_ref - last_ref_sample;
         last_ref_sample = out_ref;
-        samples_buffer[i-1] = floating_to_signed_fixed(out_ref);
+        samples_buffer[i - 1] = floating_to_signed_fixed(out_ref);
     }
 }
 
@@ -41,13 +42,13 @@ void processing_feedforward_anc(fixed_sample_type *samples_buffer,
 
     static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
                                                                      FX_FILTER_COEFFS);
-    static std::vector<sample_type> previous_reference_samples(buffer_length/2, 0.0f);
+    static std::vector<sample_type> previous_reference_samples(buffer_length / 2, 0.0f);
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
-        sample_type error_sample = INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i]);
-        sample_type reference_sample =INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i - 1]);
-        sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i/2), error_sample);
-        previous_reference_samples.at(i/2) = reference_sample;
+        sample_type error_sample = INPUT_SCALING * signed_fixed_to_floating(samples_buffer[i]);
+        sample_type reference_sample = INPUT_SCALING * signed_fixed_to_floating(samples_buffer[i - 1]);
+        sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i / 2), error_sample);
+        previous_reference_samples.at(i / 2) = reference_sample;
         fixed_sample_type fixed_correction_sample = floating_to_signed_fixed(
                 correction_sample * OUTPUT_GAIN);
         samples_buffer[i] = fixed_correction_sample;
@@ -56,21 +57,37 @@ void processing_feedforward_anc(fixed_sample_type *samples_buffer,
     }
 }
 
-void processing_feedforward_anc_subband(sample_type *samples_buffer, long unsigned int buffer_length) {
+class SubbandValues {
 
-    static FxLMSFilter<FX_FILTER_LENGTH, FILTER_LENGTH> fxlms_filter(LMS_STEP_SIZE,
-                                                                     FX_FILTER_COEFFS);
-    static std::vector<sample_type> previous_reference_samples(buffer_length/2, 0.0f);
+public:
+    typedef LMSFilter<FILTER_LENGTH> SubFilt;
+    typedef std::vector<sample_type> SubVec;
+    std::array<SubFilt, 4> subband_filters;
+    std::array<SubVec, 4> previous_reference_samples;
+
+    SubbandValues() : subband_filters{
+            SubFilt(LMS_STEP_SIZE), SubFilt(LMS_STEP_SIZE), SubFilt(LMS_STEP_SIZE), SubFilt(LMS_STEP_SIZE)},
+                      previous_reference_samples{SubVec(BUFFER_SAMPLE_SIZE / 2, 0.0f),
+                                                 SubVec(BUFFER_SAMPLE_SIZE / 2, 0.0f),
+                                                 SubVec(BUFFER_SAMPLE_SIZE / 2, 0.0f),
+                                                 SubVec(BUFFER_SAMPLE_SIZE / 2, 0.0f)} {
+    }
+};
+
+void processing_feedforward_anc_subband(sample_type *samples_buffer, long unsigned int buffer_length,
+                                        unsigned int subband_num) {
+
+    static SubbandValues subband_values;
 
     for (unsigned long i = 1; i < buffer_length; i += 2) {
-        sample_type error_sample = INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i]);
-        sample_type reference_sample =INPUT_SCALING*signed_fixed_to_floating(samples_buffer[i - 1]);
-        sample_type correction_sample = fxlms_filter.lms_step(previous_reference_samples.at(i/2), error_sample);
-        previous_reference_samples.at(i/2) = reference_sample;
-        fixed_sample_type fixed_correction_sample = floating_to_signed_fixed(
-                correction_sample * OUTPUT_GAIN);
-        samples_buffer[i] = fixed_correction_sample;
-        samples_buffer[i - 1] = fixed_correction_sample;
+        sample_type error_sample = INPUT_SCALING * samples_buffer[i];
+        sample_type reference_sample = INPUT_SCALING * samples_buffer[i - 1];
+        sample_type correction_sample = subband_values.subband_filters.at(subband_num).lms_step(
+                subband_values.previous_reference_samples.at(subband_num).at(i / 2), error_sample,
+                subband_values.previous_reference_samples.at(subband_num).at(i / 2));
+        subband_values.previous_reference_samples.at(subband_num).at(i / 2) = reference_sample;
+        samples_buffer[i] = correction_sample*OUTPUT_GAIN;
+        samples_buffer[i - 1] = correction_sample*OUTPUT_GAIN;
 
     }
 }
@@ -183,7 +200,7 @@ void processing_feedback_anc_sec_path_modelling(fixed_sample_type *samples_buffe
         fixed_sample_type fixed_correction_sample_right_channel = floating_to_signed_fixed(
                 correction_sample_right_channel * OUTPUT_GAIN);
         samples_buffer[i] = fixed_correction_sample_right_channel;
-       // Feedback fxlms step left channel
+        // Feedback fxlms step left channel
         sample_type error_sample_left_channel =
                 signed_fixed_to_floating(samples_buffer[i - 1]) + DC_REDUCTION_VALUE;
         sample_type reference_sample_left_channel = error_sample_left_channel +

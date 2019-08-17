@@ -9,7 +9,7 @@
 #include "common.h"
 
 const size_t NR_OF_CHANNELS = 2;
-const long unsigned int FILTER_LENGTH = 128;
+const long unsigned int FILTER_LENGTH = 32;
 const long unsigned int FX_FILTER_LENGTH = 156;
 const float LMS_LEAK_FACTOR =0.99999f;
 const sample_type LMS_STEP_SIZE = 0.1f;
@@ -183,7 +183,8 @@ const size_t CAP_FRAMES_PER_PERIOD = 24;
 const size_t CAP_PERIODS_PER_BUFFER = 128;
 const size_t BUFFER_SAMPLE_SIZE = CAP_FRAMES_PER_PERIOD*NR_OF_CHANNELS;
 
-const std::array<sample_type, 25> ANTYALIAS_FILTER_COEFFS = {
+const size_t ANTYALIAS_FILTER_LENGTH = 25;
+const std::array<sample_type, ANTYALIAS_FILTER_LENGTH> ANTYALIAS_FILTER_COEFFS = {
         -0.003435686952890325
        , -0.01751077870060456
        , -0.026279252493397534

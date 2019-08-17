@@ -33,10 +33,14 @@ void subband_analysis(fixed_samples_buffer &main_buffer, subband_buffers &sub_bu
             subband_filter(ANALYSIS_COEFFS_3),
             subband_filter(ANALYSIS_COEFFS_4)
     };
+    static FIRFilter<ANTYALIAS_FILTER_LENGTH> aa_filter_error(ANTYALIAS_FILTER_COEFFS);
+    static FIRFilter<ANTYALIAS_FILTER_LENGTH> aa_filter_ref(ANTYALIAS_FILTER_COEFFS);
 
-    for (unsigned long sample_i = 1; sample_i < BUFFER_SAMPLE_SIZE-NR_OF_SUBBANDS; sample_i += 2) {
+    for (unsigned long sample_i = 1; sample_i < BUFFER_SAMPLE_SIZE - NR_OF_SUBBANDS; sample_i += 2) {
         sample_type error_sample = signed_fixed_to_floating(main_buffer[sample_i]);
+        error_sample = aa_filter_error.fir_step(error_sample);
         sample_type reference_sample = signed_fixed_to_floating(main_buffer[sample_i - 1]);
+        reference_sample = aa_filter_ref.fir_step(reference_sample);
         for (unsigned long subband_i = 0; subband_i < NR_OF_SUBBANDS; ++subband_i) {
             sample_type new_error_sample = error_filters.at(subband_i).fir_step(error_sample);
             sample_type new_ref_sample = reference_filters.at(subband_i).fir_step(reference_sample);
@@ -58,6 +62,8 @@ void subband_synthesis(fixed_samples_buffer &main_buffer, subband_buffers &buffe
             subband_filter(SYNTHESIS_COEFFS_4)
     };
 
+    static FIRFilter<ANTYALIAS_FILTER_LENGTH> aa_filter(ANTYALIAS_FILTER_COEFFS);
+
     for (unsigned long sample_i = 1; sample_i < BUFFER_SAMPLE_SIZE; sample_i += 2) {
         float synthesized_sample = 0.0f;
         for (unsigned long subband_i = 0; subband_i < NR_OF_SUBBANDS; ++subband_i) {
@@ -72,15 +78,16 @@ void subband_synthesis(fixed_samples_buffer &main_buffer, subband_buffers &buffe
             synthesized_sample += new_ref_sample;
         }
 //      Fill both output channels
-        main_buffer.at(sample_i) = floating_to_signed_fixed(synthesized_sample);
-        main_buffer.at(sample_i - 1) = floating_to_signed_fixed(synthesized_sample);
+        sample_type out_sample = aa_filter.fir_step(synthesized_sample);
+        main_buffer.at(sample_i) = floating_to_signed_fixed(out_sample);
+        main_buffer.at(sample_i - 1) = floating_to_signed_fixed(out_sample);
     }
 
 }
 
 int main() {
 
-    omp_set_num_threads(8);
+    omp_set_num_threads(4);
     const long RESERVED_SAMPLES = 2560000;
     std::vector<fixed_sample_type> err_vec;
     err_vec.reserve(RESERVED_SAMPLES);
@@ -119,10 +126,12 @@ int main() {
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> capture_buffer = {0};
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> playback_buffer = {0};
     std::array<fixed_sample_type, BUFFER_SAMPLE_SIZE> processing_buffer = {0};
-    subband_buffers sub_buffers = {{0}};
-    const int START_PROCESSING_AFTER_SAMPLE = 1000;
+    subband_buffers subband_buffers_cap = {0.0f};
+    subband_buffers subband_buffers_proc = {0.0f};
+    subband_buffers subband_buffers_play = {0.0f};
+    const int START_PROCESSING_AFTER_SAMPLE = 10;
 
-    while (sample < 12000) {
+    while (sample < 52000) {
         ++sample;
 #pragma omp parallel sections
         {
@@ -130,6 +139,7 @@ int main() {
             {
                 capture(cap_handle, capture_buffer.data(), CAP_FRAMES_PER_PERIOD);
                 dc_removal(capture_buffer.data(), BUFFER_SAMPLE_SIZE);
+                subband_analysis(capture_buffer, subband_buffers_cap);
                 for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
                     if (i % 2)
                         err_vec.push_back(capture_buffer[i]);
@@ -139,16 +149,11 @@ int main() {
 #pragma omp section
             {
                 if (sample > START_PROCESSING_AFTER_SAMPLE) {
-#ifdef FEEDFORWARD
-                    subband_analysis(processing_buffer, sub_buffers);
-#pragma omp parallel for
+//#pragma omp parallel for
                     for (unsigned int subband_i = 0; subband_i < NR_OF_SUBBANDS; ++subband_i) {
-                        processing_feedforward_anc_subband(sub_buffers.at(subband_i).data(), BUFFER_SAMPLE_SIZE);
+                        processing_feedforward_anc_subband(subband_buffers_proc.at(subband_i).data(),
+                                                           SUB_BUFFER_SIZE, subband_i);
                     }
-                    subband_synthesis(processing_buffer, sub_buffers);
-#else
-                    processing_feedback_anc_sec_path_modelling(processing_buffer, BUFFER_SAMPLE_SIZE);
-#endif
                 }
                 for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
                     if (i % 2)
@@ -160,12 +165,21 @@ int main() {
             }
 #pragma omp section
             {
+                subband_synthesis(playback_buffer, subband_buffers_play);
                 playback(play_handle, playback_buffer.data(), PLAY_FRAMES_PER_PERIOD);
             }
         }
 // Exchange data between arrays
-        std::copy(processing_buffer.begin(), processing_buffer.end(), playback_buffer.begin());
-        std::copy(capture_buffer.begin(), capture_buffer.end(), processing_buffer.begin());
+#pragma omp parallel for
+        for (unsigned int i = 0; i < NR_OF_SUBBANDS; ++i) {
+            std::copy(subband_buffers_proc.at(i).begin(), subband_buffers_proc.at(i).end(),
+                      subband_buffers_play.at(i).begin());
+        }
+#pragma omp parallel for
+        for (unsigned int i = 0; i < NR_OF_SUBBANDS; ++i) {
+            std::copy(subband_buffers_cap.at(i).begin(), subband_buffers_cap.at(i).end(),
+                      subband_buffers_proc.at(i).begin());
+        }
     }
 
 #ifdef FEEDFORWARD
