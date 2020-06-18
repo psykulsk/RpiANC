@@ -50,8 +50,11 @@ Python2.7 libraries (matplotlibcpp dependency) so packages like: python-dev
 
 Cmake and make commands build a few binaries. The main one, is the `ffANC` binary that executes tha main function from
 the [feedforward_anc.cpp](Mains/feedforward_anc.cpp) file. Inside this file you can define  or remove the DEPLOYED_ON_RPI macro to
-change devices used for capture and playback. In [constants.h](Headers/constants.h) file, you can find the names of devices
-used on Raspberry Pi. They may differ on your hardware. 
+change devices used for capture and playback. Define CAP_MEASUREMENTS macro to capture sample values and save them to files.
+
+Main of the `ffANC` target executes a specified number of loop iterations. During each iteration, 3 sections are executed in 3 separate threads using OpenMP directives. They: capture new samples from the input microphones, process previously captured samples and play the previously calculated output samples. After all 3 sections complete their tasks, data is exchanged between arrays, so that, in the next iteration, processing is done on the most recently captured data and the most recently calculated output samples are played.
+
+In [constants.h](Headers/constants.h) file, you can find the names of devices used on Raspberry Pi and other constants used in signal processing.
 
 All signal processing is in the header files under the [Headers](Headers)
 and the [processing.cpp](Sources/processing.cpp) source file.
