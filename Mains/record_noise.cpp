@@ -19,8 +19,8 @@ int main() {
 
 
 #ifdef DEPLOYED_ON_RPI
-    const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
-    const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
+    const std::string capture_device_name = RPI_CAPTURE_DEVICE_NAME;
+    const std::string playback_device_name = RPI_PLAYBACK_DEVICE_NAME;
 #else
     const std::string capture_device_name = "default";
     const std::string playback_device_name = "default";
@@ -28,13 +28,13 @@ int main() {
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
-    unsigned int number_of_channels = 2;
-    snd_pcm_uframes_t cap_period_size = 64;
+    unsigned int number_of_channels = NR_OF_CHANNELS;
+    snd_pcm_uframes_t cap_frames_per_period = CAP_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t cap_frames_per_device_buffer = CAP_PERIODS_PER_BUFFER * CAP_FRAMES_PER_PERIOD;
 
-    init_capture(&cap_handle, &play_freq, &cap_period_size, number_of_channels,
+    init_capture(&cap_handle, &play_freq, &cap_frames_per_period, &cap_frames_per_device_buffer,number_of_channels,
                  capture_device_name);
-    snd_pcm_uframes_t buffer_length = cap_period_size * number_of_channels;
-    fixed_sample_type capture_buffer[buffer_length];
+    fixed_sample_type capture_buffer[BUFFER_SAMPLE_SIZE];
 
 
     snd_pcm_t *play_handle;
@@ -51,15 +51,15 @@ int main() {
         ++sample;
         size_t size = play_buffer_length * sizeof(fixed_sample_type);
         noise_file.read((char *) play_buffer, size);
-        playback(play_handle, play_buffer, cap_period_size);
-        for (unsigned long i = 0; i < buffer_length; ++i) {
+        playback(play_handle, play_buffer, PLAY_FRAMES_PER_PERIOD);
+        for (unsigned long i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
             if(i%2)
                 left_channel_noise.push_back(play_buffer[i]);
             else
                 right_channel_noise.push_back(play_buffer[i]);
         }
-        capture(cap_handle, capture_buffer, cap_period_size);
-        for (unsigned long i = 0; i < buffer_length; ++i) {
+        capture(cap_handle, capture_buffer, CAP_FRAMES_PER_PERIOD);
+        for (unsigned long i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
             if(i%2)
                 record_vec.push_back(capture_buffer[i]);
         }

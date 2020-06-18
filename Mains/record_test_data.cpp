@@ -11,7 +11,7 @@ int main() {
     std::vector<fixed_sample_type> ref_vec;
 
 #ifdef DEPLOYED_ON_RPI
-    const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
+    const std::string capture_device_name = RPI_CAPTURE_DEVICE_NAME;
 #else
     const std::string capture_device_name = "default";
 #endif
@@ -19,19 +19,19 @@ int main() {
 
     snd_pcm_t *cap_handle;
     unsigned int play_freq = 44100;
-    unsigned int number_of_channels = 2;
-    snd_pcm_uframes_t cap_period_size = 64;
+    unsigned int number_of_channels = NR_OF_CHANNELS;
+    snd_pcm_uframes_t cap_frames_per_period = CAP_FRAMES_PER_PERIOD;
+    snd_pcm_uframes_t cap_frames_per_device_buffer = CAP_PERIODS_PER_BUFFER * CAP_FRAMES_PER_PERIOD;
 
-    init_capture(&cap_handle, &play_freq, &cap_period_size, number_of_channels,
+    init_capture(&cap_handle, &play_freq, &cap_frames_per_period, &cap_frames_per_device_buffer,number_of_channels,
                  capture_device_name);
-    snd_pcm_uframes_t buffer_length = cap_period_size * number_of_channels;
-    fixed_sample_type buffer[buffer_length];
+    fixed_sample_type buffer[BUFFER_SAMPLE_SIZE];
 
     int sample = 0;
     while (sample < 10000) {
         ++sample;
-        capture(cap_handle, buffer, cap_period_size);
-        for (unsigned int i = 0; i < buffer_length; ++i)
+        capture(cap_handle, buffer, BUFFER_SAMPLE_SIZE);
+        for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
             if (i % 2)
                 err_vec.push_back(buffer[i]);
             else

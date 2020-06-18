@@ -424,14 +424,6 @@ void ff_anc_sec_path_modelling_processing_test() {
 }
 
 int main() {
-//    fxlmstest_recorded_data();
-//    fxlmstest_fixed();
-//    fxlmstest();
-//    feedback_fxlms_test();
-    ff_anc_processing_test();
-//    ff_anc_sec_path_modelling_processing_test();
-//    fb_anc_processing_test();
-//    fb_anc_sec_path_modelling_processing_test();
-
+    fxlmstest();
     return 0;
 }

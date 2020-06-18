@@ -92,8 +92,8 @@ int main() {
     corr_vec_2.reserve(RESERVED_SAMPLES);
 
 #ifdef DEPLOYED_ON_RPI
-    const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
-    const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
+    const std::string capture_device_name = RPI_CAPTURE_DEVICE_NAME;
+    const std::string playback_device_name = RPI_PLAYBACK_DEVICE_NAME;
 #else
     const std::string capture_device_name = "default";
     const std::string playback_device_name = "default";

@@ -6,10 +6,10 @@ rsync -avz --cvs-exclude ../../RpiANC \
 --exclude "RpiANC/Makefile" \
 --exclude "RpiANC/OctaveCode" \
 --exclude "RpiANC/.idea" \
-../../RpiANC pi@192.168.0.155:./ \
-&& ssh pi@192.168.0.155 "cd ~/RpiANC && make ffANC" \
-&& ssh pi@192.168.0.155 "cd ~/RpiANC && ./ffANC" \
-&& rsync -avz pi@192.168.0.155:~/RpiANC/rec/ ./audio_files
+../../RpiANC pi@raspberry:./ \
+&& ssh pi@raspberry "cd ~/RpiANC && make ffANC" \
+&& ssh pi@raspberry "cd ~/RpiANC && ./ffANC" \
+&& rsync -avz pi@raspberry:~/RpiANC/rec/ ./audio_files
 pipenv run ./plot_fb_test_results.py &
 #play ./audio_files/400Hz_test.mp3
 #pkill mpsyt && \

@@ -50,10 +50,10 @@ add_executable(recTestData Mains/record_test_data.cpp ${SOURCE_FILES} ${SOUND_IN
 target_include_directories(recTestData PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(recTestData asound ${PYTHON_LIBRARIES})
 
-add_executable(lmstest Mains/lmstest.cpp ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(lmstest Mains/lmstest.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(lmstest PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(lmstest ${PYTHON_LIBRARIES})
+target_link_libraries(lmstest asound ${PYTHON_LIBRARIES})
 
-add_executable(fxlmstest Mains/fxlmstest.cpp ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(fxlmstest Mains/fxlmstest.cpp ${SOURCE_FILES} ${SOUND_INTERFACE_SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(fxlmstest PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(fxlmstest ${PYTHON_LIBRARIES})
+target_link_libraries(fxlmstest asound ${PYTHON_LIBRARIES})

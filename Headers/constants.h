@@ -8,8 +8,10 @@
 
 #include "common.h"
 
+const std::string RPI_CAPTURE_DEVICE_NAME = "hw:CARD=sndrpisimplecar,DEV=0";
+const std::string RPI_PLAYBACK_DEVICE_NAME = "plughw:CARD=ALSA,DEV=0";
 const size_t NR_OF_CHANNELS = 2;
-const long unsigned int FILTER_LENGTH = 128;
+const long unsigned int FILTER_LENGTH = 256;
 const long unsigned int FX_FILTER_LENGTH = 156;
 const float LMS_LEAK_FACTOR =0.99999f;
 const sample_type LMS_STEP_SIZE = 0.1f;

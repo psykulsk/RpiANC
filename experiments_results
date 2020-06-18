@@ -1,3 +1,0 @@
-delayCheck, rt_kernel, no priorities, 100 tries, generated audio, peak detection based on diff
-Min: 1970 Max: 64507 avg: 28351.6 median: 22264 std deviation: 19553.1
-

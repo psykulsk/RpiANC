@@ -28,8 +28,8 @@ int main() {
     corr_vec_2.reserve(RESERVED_SAMPLES);
 
 #ifdef DEPLOYED_ON_RPI
-    const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
-    const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
+    const std::string capture_device_name = RPI_CAPTURE_DEVICE_NAME;
+    const std::string playback_device_name = RPI_PLAYBACK_DEVICE_NAME;
 #else
     const std::string capture_device_name = "default";
     const std::string playback_device_name = "default";
@@ -69,11 +69,14 @@ int main() {
             {
                 capture(cap_handle, capture_buffer.data(), CAP_FRAMES_PER_PERIOD);
                 dc_removal(capture_buffer.data(), BUFFER_SAMPLE_SIZE);
-//                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
-//                    if (i % 2)
-//                        err_vec.push_back(capture_buffer[i]);
-//                    else
-//                        ref_vec.push_back(capture_buffer[i]);
+
+#ifdef CAP_MEASUREMENTS
+                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i)
+                    if (i % 2)
+                        err_vec.push_back(capture_buffer[i]);
+                    else
+                        ref_vec.push_back(capture_buffer[i]);
+#endif
             }
 #pragma omp section
             {
@@ -82,12 +85,14 @@ int main() {
                                                   BUFFER_SAMPLE_SIZE,
                                                   secondary_path_estimation_filter);
                 }
-//                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
-//                    if (i % 2)
-//                        corr_vec_2.push_back(processing_buffer[i]);
-//                    else
-//                        corr_vec.push_back(floating_to_signed_fixed(secondary_path_estimation_filter.fir_filter.get_coefficients().at(0)));
-//                }
+#ifdef CAP_MEASUREMENTS
+                for (unsigned int i = 0; i < BUFFER_SAMPLE_SIZE; ++i) {
+                    if (i % 2)
+                        corr_vec_2.push_back(processing_buffer[i]);
+                    else
+                        corr_vec.push_back(floating_to_signed_fixed(secondary_path_estimation_filter.fir_filter.get_coefficients().at(0)));
+                }
+#endif
 
             }
 #pragma omp section
@@ -110,9 +115,11 @@ int main() {
         std::cout << coeff << ",\n";
     }
 
-//    save_vector_to_file("rec/err_mic.dat", err_vec);
-//    save_vector_to_file("rec/ref_mic.dat", ref_vec);
-//    save_vector_to_file("rec/corr_sig.dat", corr_vec);
+#ifdef CAP_MEASUREMENTS
+    save_vector_to_file("rec/err_mic.dat", err_vec);
+    save_vector_to_file("rec/ref_mic.dat", ref_vec);
+    save_vector_to_file("rec/corr_sig.dat", corr_vec);
+#endif
 
     snd_pcm_drain(play_handle);
     snd_pcm_close(play_handle);

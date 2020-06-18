@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
 
 
 #ifdef DEPLOYED_ON_RPI
-    const std::string capture_device_name = "hw:CARD=sndrpisimplecar,DEV=0";
-    const std::string playback_device_name = "plughw:CARD=ALSA,DEV=0";
+    const std::string capture_device_name = RPI_CAPTURE_DEVICE_NAME;
+    const std::string playback_device_name = RPI_PLAYBACK_DEVICE_NAME;
 #else
     const std::string capture_device_name = "default";
     const std::string playback_device_name = "default";
@@ -57,18 +57,7 @@ int main(int argc, char *argv[]) {
                   &play_frames_per_device_buffer, number_of_channels, playback_device_name);
 
 
-    fixed_sample_type capture_buffer[cap_frames_per_period];
     std::vector<long> delay_test_results;
-//    std::ifstream noise_file("tone_sine_5k.raw", std::ios::binary | std::ios::in);
-//    std::ofstream output_file("delay_test_capture_samples.raw", std::ios::binary | std::ios::out);
-//    if (!noise_file.is_open()) {
-//        std::cout << "File not opened" << std::endl;
-//        return -1;
-//    }
-//    if (!noise_file.good()) {
-//        std::cout << "File not good" << std::endl;
-//        return -1;
-//    }
 
     for (unsigned long i = 0; i < number_of_tests; ++i) {
         snd_pcm_prepare(cap_handle);
@@ -83,13 +72,8 @@ int main(int argc, char *argv[]) {
         snd_pcm_drain(play_handle);
         usleep(100000);
         snd_pcm_drop(play_handle);
-//        std::cout << "before extra cap" << std::endl;
-//        for (int j = 0; j < 50; j++) {
-//        }
     }
 
-//    noise_file.close();
-//    output_file.close();
 
     if (delay_test_results.size() > 1) {
 //        Remove first, flawed element of results
@@ -106,9 +90,6 @@ int main(int argc, char *argv[]) {
 
         double deviation = std_deviation(delay_test_results, average);
 
-//        std::cout << "Min: " << min << " Max: " << max << " avg: " << average << " median: "
-//                  << delay_test_results.at(delay_test_results.size() / 2)
-//                  << " std deviation: " << deviation << std::endl;
         std::cout << CAP_FRAMES_PER_PERIOD <<" "<< min << " " << max << " " << average << " "
                   << delay_test_results.at(delay_test_results.size() / 2)
                   << " " << deviation << std::endl;

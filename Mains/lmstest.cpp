@@ -42,7 +42,7 @@ void lms_test() {
     signal_vec correction_vect;
     signal_vec error_signal;
     for (unsigned long i = 0; i < number_of_samples; ++i) {
-        sample_type correction_sample = lms_filter.lms_step(reference_signal.at(i), error_sample);
+        sample_type correction_sample = lms_filter.lms_step(reference_signal.at(i), error_sample, reference_signal.at(i));
         sample_type corrected_sample = reference_signal.at(i) - correction_sample;
         error_sample = original_signal.at(i) - corrected_sample;
         error_signal.push_back(error_sample);
