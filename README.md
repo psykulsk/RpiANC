@@ -48,7 +48,7 @@ Python2.7 libraries (matplotlibcpp dependency) so packages like: python-dev
 
 ## Repository and code structure
 
-Via the generated Makefile, a few binaries are built. The main one, is the `ffANC` binary that executes tha main function from
+Cmake and make commands build a few binaries. The main one, is the `ffANC` binary that executes tha main function from
 the [feedforward_anc.cpp](Mains/feedforward_anc.cpp) file. Inside this file you can define  or remove the DEPLOYED_ON_RPI macro to
 change devices used for capture and playback. In [constants.h](Headers/constants.h) file, you can find the names of devices
 used on Raspberry Pi. They may differ on your hardware. 
