@@ -16,6 +16,8 @@ that will be presented at the Signal Processing Workshop 2020 conference https:/
 
 ![Assembled system](docs/rpi_anc_system.png)
 
+![System schematic](docs/anc-system-schematic.png)
+
 
 ## Build and run commands
 
