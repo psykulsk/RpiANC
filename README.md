@@ -9,7 +9,7 @@ that will be presented at the Signal Processing Workshop 2020 conference https:/
 ## Used hardware
 * Raspberry Pi 3 Model A+
 
-* Tiny MEMS Microphone - https://www.adafruit.com/product/3421
+* Two Tiny MEMS Microphones - https://www.adafruit.com/product/3421
 
 * On-ear headphones connected via 3.5mm jack
 
@@ -61,7 +61,11 @@ and the [processing.cpp](Sources/processing.cpp) source file.
 
 ## Useful links, articles, etc.
 
-Microphone wiring and connection guide - https://learn.adafruit.com/adafruit-i2s-mems-microphone-breakout/
+* [Microphone wiring and connection guide](https://learn.adafruit.com/adafruit-i2s-mems-microphone-breakout/raspberry-pi-wiring-test#wiring-for-stereo-mic-3061608-5)
+* [Introduction to Sound Programming with ALSA](https://www.linuxjournal.com/article/6735)
+* [A Tutorial on Using the ALSA Audio API](http://equalarea.com/paul/alsa-audio.html)
+* [Rpi I2S thread](https://www.raspberrypi.org/forums/viewtopic.php?t=91237)
+* [Implementation of FIR Filtering in C](https://sestevenson.wordpress.com/implementation-of-fir-filtering-in-c-part-1/)
 
 
 ## Included third-party libraries
