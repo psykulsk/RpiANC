@@ -40,21 +40,28 @@ Simple tests that show how LMS and FxLMS attenuate simulated noise on matplotlib
 
 ## Build dependencies 
 
-Look into the CMakeLists.txt but the mainly (builds tested on Ubuntu 18.04 and Raspbian distributions):
+Builds tested on Ubuntu 18.04 and Raspbian distributions:
 ```
+Cmake >= 3.7
 Alsa library, so packages like: libasound2, libasound2-dev.
-OpenMP
 Python2.7 libraries (matplotlibcpp dependency) so packages like: python-dev
+OpenMP directives (propably supported by your compiler)
 ```
 
 
 ## Repository and code structure
 
 Cmake and make commands build a few binaries. The main one, is the `ffANC` binary that executes tha main function from
-the [feedforward_anc.cpp](Mains/feedforward_anc.cpp) file. Inside this file you can define  or remove the DEPLOYED_ON_RPI macro to
-change devices used for capture and playback. Define CAP_MEASUREMENTS macro to capture sample values and save them to files.
+the [feedforward_anc.cpp](Mains/feedforward_anc.cpp) file. Inside this file you can define  or remove the DEPLOYED_ON_RPI
+macro to change devices used for capture and playback. Define CAP_MEASUREMENTS macro to capture sample values and save
+them to files.
 
-Main of the `ffANC` target executes a specified number of loop iterations. During each iteration, 3 sections are executed in 3 separate threads using OpenMP directives. They: capture new samples from the input microphones, process previously captured samples and play the previously calculated output samples. After all 3 sections complete their tasks, data is exchanged between arrays, so that, in the next iteration, processing is done on the most recently captured data and the most recently calculated output samples are played.
+The main function of the `ffANC` target executes a specified number of loop iterations. During each iteration 3 main
+operations: capture of new samples, sample processing and playback of the calculated samples, are executed concurrently,
+in a fork-join model. Firstly, each of the 3 operations is executed in a separate thread. Then, output samples from each
+operation are exchanged. Most recently calculated output samples are moved to the input array of the playback function
+and newly captured samples are moved to the input array of the signal processing function.
+
 
 In [constants.h](Headers/constants.h) file, you can find the names of devices used on Raspberry Pi and other constants used in signal processing.
 
