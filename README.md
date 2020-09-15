@@ -70,6 +70,11 @@ and the [processing.cpp](Sources/processing.cpp) source file.
 
 [Scripts](Scripts) directory contains python and bash scripts that automate measurements, gathering data, deploying code etc.
 
+## Results
+
+Comparison of attenuation of a noise signal of a constant frequency between the created ANC system and Sennheiser HR 4.50 BTNC headphones.
+
+![Attenuation comparison](docs/attenuation_comp.png)
 
 ## Useful links, articles, etc.
 
