@@ -9,6 +9,9 @@ that has been presented at the Signal Processing Workshop 2020 conference https:
 Link to the article: https://ieeexplore.ieee.org/document/9259141
 
 
+Disclaimer: this implementation worked on a specific hardware setup and attenuated a specific (constant frequency) type of noise (attenuation measurements graph can be found in the results section below). It is not guaranteed that it will work out of the box
+on a different setup. I've published the code on github so that when someone else is going to try to implement something similar this codebase can be used as a starting point or an inspiration.
+
 ## Used hardware
 * Raspberry Pi 3 Model A+
 
